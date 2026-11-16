@@ -208,9 +208,9 @@
       { d: 200, html: "" },
       { d: 120, html: '<span class="t-head">  Summary</span>' },
       { d: 120, html: '  <span class="sv-crit">critical 2</span>   <span class="sv-high">high 1</span>   <span class="t-dim">medium 0   low 0</span>' },
-      { d: 120, html: '<span class="t-dim">  3 files infected, 1,281 clean</span>' },
+      { d: 120, html: '<span class="t-dim">  3 likely malicious (critical or high), 0 worth a look (medium or low), 1,281 clean</span>' },
       { d: 260, html: "" },
-      { d: 120, html: '<span class="t-ok">  Review the findings, then remove them safely with <span class="nb">--quarantine</span></span>' }
+      { d: 120, html: '<span class="t-ok">  Review the findings, then move them out of the site with <span class="nb">--quarantine</span></span>' }
     ];
 
     let timers = [];

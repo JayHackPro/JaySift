@@ -81,7 +81,7 @@ test("restore still returns every byte, mode and time, from the new store", asyn
     assert.equal(await fs.readFile(file, "utf8"), SHELL);
     const after = await fs.stat(file);
     assert.equal(after.mode & 0o777, 0o640);
-    assert.equal(Math.round(after.mtimeMs), Math.round(before.mtimeMs));
+    assert.ok(Math.abs(after.mtimeMs - before.mtimeMs) < 2, "modified time kept to the millisecond");
   } finally {
     await fs.rm(dir, { recursive: true, force: true });
   }

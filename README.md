@@ -3,7 +3,7 @@
 <img src="docs/assets/hero.png" alt="JaySift by JayHackPro, find and remove web malware" width="100%">
 
 A fast, dependency-free malware scanner and remover for websites and servers.<br>
-Point it at a folder, see exactly what is infected, then quarantine the threats safely.
+Point it at a folder, see exactly what was flagged and why, then quarantine the likely malware safely.
 
 [![npm](https://img.shields.io/npm/v/jaysift?color=46f08a&labelColor=0b120e&logo=npm&logoColor=white)](https://www.npmjs.com/package/jaysift)
 [![License](https://img.shields.io/badge/license-MIT-46f08a?labelColor=0b120e)](LICENSE)
@@ -28,8 +28,8 @@ wrong.
 JaySift does it in seconds. It reads every file, matches it against a library
 of malware techniques, checks its exact fingerprint against known bad files,
 and looks for the telltale shapes of packed and hidden code. Then it shows you
-a clear, ranked report and offers to move the threats into a local vault so your
-site stops serving them right away.
+a clear, ranked report and offers to move the likely malware into a local vault
+so your site stops serving it right away.
 
 It is one small tool with no dependencies, so you can trust it, read it, and run
 it anywhere Node is installed.
@@ -105,7 +105,7 @@ npx jaysift ~/Downloads/example.com
 
 The report is about the copy. Nothing on the live site changes, so clean the
 live site by hand using the paths in the report: delete planted files over SFTP
-and replace infected WordPress files with clean copies (see below).
+and replace flagged WordPress files with clean copies (see below).
 
 **Scan the whole site root, not just `wp-content`.** Attackers also edit
 `wp-config.php`, `.htaccess`, and the root `index.php`, and JaySift can only
@@ -157,8 +157,15 @@ A report ranked by severity, with the exact line and a plain-language reason for
 - **Webshells**: c99, r57, WSO, b374k, FilesMan, and the generic remote file
   managers and command runners built on the same patterns.
 - **Backdoors**: `eval` of request input, variable functions driven by
-  `$_GET` and `$_POST`, the `preg_replace` `/e` trick, remote payloads that are
-  fetched and run, hardcoded password gates, and reverse shells.
+  `$_GET` and `$_POST`, `include` of request input, backtick commands, the
+  `preg_replace` `/e` trick, remote payloads that are fetched and run,
+  hardcoded password gates, and reverse shells.
+- **One step of disguise**: a request value or a decoded payload copied into a
+  variable before it reaches `eval` or `system`, and a comment slipped between
+  a function name and its bracket, as in `eval/**/(`.
+- **Hostile server configuration**: an `.htaccess` that runs images as PHP or
+  redirects visitors who arrive from a search engine, and `auto_prepend_file`
+  in `.htaccess`, `.user.ini`, or `php.ini` pointing at a disguised file.
 - **Obfuscation**: decode then run payloads, character code and hex string
   tricks, packed one-liners, and large encoded blobs paired with a decoder.
 - **Injected front-end malware**: hidden or zero-size iframes, `document.write`
@@ -168,16 +175,33 @@ A report ranked by severity, with the exact line and a plain-language reason for
 - **Skimmers and spam**: session cookie exfiltration and blocks of hidden SEO or
   pharma spam links.
 - **Disguised files**: PHP hidden inside something that claims to be an image,
-  double extensions like `invoice.pdf.php`, and executable scripts sitting in an
-  uploads folder where only static files belong.
+  double extensions like `invoice.pdf.php`, a script saved as `.inc` or under
+  any other name, and executable scripts sitting in an uploads folder where
+  only static files belong.
 - **Known bad files**: exact matches against a hash set you can extend, plus the
   EICAR antivirus test file.
+
+## What a finding means
+
+A finding is a reason to look at a file. How strong a reason depends on its
+severity, and the report says which is which:
+
+| Severity | Meaning | `--quarantine` |
+| --- | --- | --- |
+| critical, high | **Likely malicious.** The file matches something rarely seen outside an attack. | Moves it |
+| medium, low | **Worth a look.** Unusual, and sometimes how an attack is hidden, but ordinary sites have files like this too. | Leaves it in place |
+
+JaySift does not call a file infected on a medium or low finding. In PHP files
+it reads the code, not the comments, so a comment that mentions `eval` is not a
+finding.
 
 ## Remove threats safely
 
 JaySift never deletes your files. When you are ready to clean up, quarantine
-moves each flagged file into a local vault and records where it came from, so
-your live site stops serving it at once while every byte is kept.
+moves each file with a critical or high finding into a local vault and records
+where it came from, so your live site stops serving it at once while every byte
+is kept. Files with only medium or low findings stay where they are; add
+`--quarantine-severity low` if you have looked at them and want them moved too.
 
 On a WordPress site, check the tags in the report first. Files tagged
 `[wordpress core]`, `[wordpress config]`, `[wordpress theme]`, or
@@ -189,7 +213,7 @@ with clean copies. Run `--dry-run` first so you know what will move.
 # preview what would move, changing nothing
 jaysift ./public_html --quarantine --dry-run
 
-# move every threat into the vault
+# move critical and high findings into the vault
 jaysift ./public_html --quarantine
 
 # see what is in the vault
@@ -201,6 +225,15 @@ jaysift --restore <id>
 # put everything back
 jaysift --restore
 ```
+
+**Where the vault is.** The vault is a folder named `.jaysift-quarantine` in
+the folder you run the command from, and the report prints its full path.
+`--list` and `--restore` look in the same place, so run them from that folder
+or name the vault with `--vault <dir>`. Keep it outside the website: run
+JaySift from the folder above the site, or pass `--vault` a folder a web
+server cannot reach. If the vault does land inside the scanned folder the
+report warns you. Stored files are renamed so that no `.php` or other script
+ending survives, and the vault carries an `.htaccess` that denies access.
 
 If you have confirmed the files are malicious and want the disk space back, and
 only then, you can permanently delete the vault:
@@ -217,7 +250,8 @@ jaysift [paths...] [options]
 
 | Option | What it does |
 | --- | --- |
-| `--quarantine` | Move every threat into the local vault |
+| `--quarantine` | Move files with critical or high findings into the local vault |
+| `--quarantine-severity <level>` | Lowest severity `--quarantine` moves (default `high`) |
 | `--restore [id]` | Put quarantined files back, one or all |
 | `--list` | Show what is in the vault |
 | `--purge --yes` | Permanently delete the vault (last resort) |
@@ -226,7 +260,7 @@ jaysift [paths...] [options]
 | `--include <dir,...>` | Scan folders that are skipped by name, or `all` |
 | `--hashes <file>` | Add known bad sha256 hashes, one per line |
 | `--max-size <MB>` | Skip files larger than this (default 5) |
-| `--vault <dir>` | Quarantine folder (default `.jaysift-quarantine`) |
+| `--vault <dir>` | Quarantine folder (default `.jaysift-quarantine` in the folder you run from) |
 | `--follow-symlinks` | Follow symbolic links (off by default) |
 | `--dry-run` | Show actions without changing anything |
 | `--json` | Machine-readable output for pipelines |
@@ -238,8 +272,9 @@ jaysift [paths...] [options]
 | `-V, --version` | Print the version |
 | `-h, --help` | Show help |
 
-Exit codes: `0` clean, `1` threats found, `2` error. That makes JaySift easy
-to drop into a CI pipeline or a cron job.
+Exit codes: `0` clean, `1` something was flagged, `2` error. That makes JaySift
+easy to drop into a CI pipeline or a cron job. A medium or low finding also
+exits `1`; add `--min-severity high` to act only on likely malware.
 
 **What is skipped, and how to see it.** Folders named `.git`, `.svn`, `.hg`,
 `node_modules`, `vendor`, `.cache`, and the quarantine vault are skipped by
@@ -272,15 +307,23 @@ npm install jaysift
 import { scan, quarantineFiles } from "jaysift";
 
 const result = await scan(["./public_html"], { includeDirs: ["vendor"] });
-console.log(`${result.infected.length} infected of ${result.stats.scanned} scanned`);
+console.log(`${result.flagged.length} flagged of ${result.stats.scanned} scanned`);
 for (const site of result.sites) console.log(`WordPress ${site.version} at ${site.root}`);
 
+// Each flagged file has a severity and a verdict: "likely-malicious" or "review".
+const likely = result.flagged.filter((r) => r.verdict === "likely-malicious");
+
 // Quarantine planted files. Files tagged as the site's own code need a clean copy instead.
-const planted = result.infected.filter((r) => !r.site);
+// quarantineFiles moves critical and high findings; pass minSeverity to move more.
+const planted = likely.filter((r) => !r.site);
 if (planted.length) {
-  await quarantineFiles(planted, { vaultDir: ".vault" });
+  const q = await quarantineFiles(planted, { vaultDir: "../jaysift-vault" });
+  console.log(`moved ${q.moved.length}, left ${q.skipped.length}`);
 }
 ```
+
+`result.infected` is the old name for `result.flagged` and still works, in the
+result and in `--json`.
 
 ## Extend it
 
@@ -343,7 +386,18 @@ WordPress 7.1 with and without `--include vendor`, WooCommerce 11.1.0, the
 Astra theme 4.13.11, jQuery 3.7.1, and Laravel 12.x, over twelve thousand files
 in all, with zero findings. The same run must still catch every planted threat
 in the test fixtures. The test suite runs on every change on Node 18, 20, and
-22. If JaySift flags a clean file on your site, that is a bug worth
+22.
+
+The suite also carries a corpus of 69 harmless stand-ins, written to a
+temporary folder when it runs: 24 clean files, 29 with one known technique
+each written the plain way, and 16 with one light disguise each. `npm run
+corpus` prints the counts. Today JaySift flags all 29 plain techniques, 7 of
+the 16 disguises (9 with `--include all --max-size 10`), and calls none of the
+24 clean files likely malicious; 3 of them get a medium or low finding. The
+disguises it still misses are a function name built by joining strings, a
+function passed by name as a callback, request input written straight to a
+file, a WordPress login backdoor, a plain external script tag, a script loader
+written as hex strings, and a classic ASP one-liner. If JaySift flags a clean file on your site, that is a bug worth
 [reporting](https://github.com/JayHackPro/JaySift/issues).
 
 ## Development
@@ -351,6 +405,7 @@ in the test fixtures. The test suite runs on every change on Node 18, 20, and
 ```bash
 npm test        # run the full suite on Node's built in test runner
 npm run selftest
+npm run corpus  # count what is caught, missed and wrongly flagged on the stand-ins
 ```
 
 Zero runtime dependencies, by design. A security tool should be small enough to
