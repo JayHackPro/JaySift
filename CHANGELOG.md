@@ -3,10 +3,11 @@
 All notable changes to JaySift are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## 1.4.0 - 2026-11-17
+## 1.4.1 - 2026-11-17
 
 The tool has a new name, JaySift. It was called JayShield until this release.
-Nothing about how it scans has changed.
+Nothing about how it scans has changed. The number 1.4.0 was tagged but never
+reached npm, which had reserved it, so the first JaySift on npm is 1.4.1.
 
 ### Changed
 
