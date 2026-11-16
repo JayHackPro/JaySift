@@ -12,9 +12,10 @@ import { rulesForKind, globalize, kindForPath } from "./rules.js";
 import { runHeuristics, runByteHeuristics, evidenceAt } from "./heuristics.js";
 import { matchHash } from "./hashes.js";
 import { readPhp, opensWithPhp } from "./php.js";
+import { SEVERITY_RANK, topSeverity, verdictFor } from "./severity.js";
 import { findWordPressRoots, noteWordPressRoot, classifySiteFile, readWordPressVersion } from "./site.js";
 
-export const SEVERITY_RANK = { critical: 4, high: 3, medium: 2, low: 1 };
+export { SEVERITY_RANK };
 const DEFAULT_MAX_BYTES = 5 * 1024 * 1024; // 5 MB
 const MATCHES_PER_RULE = 25;
 // Files with these kinds are always read as text, even if a stray null byte
@@ -128,7 +129,11 @@ export function scanBuffer(filePath, buffer, options = {}) {
  * @param {boolean} [options.followSymlinks]
  * @param {string} [options.minSeverity]     drop findings below this level
  * @param {(info:{path:string,findings:Array}) => void} [options.onFile]
- * @returns {Promise<object>} the scan result
+ * @returns {Promise<object>} the scan result. `flagged` lists every file with
+ *   a finding, worst first; each carries its `severity` and a `verdict` of
+ *   "likely-malicious" (critical or high) or "review" (medium or low).
+ *   `infected` is the old name for the same list and is kept so existing
+ *   code keeps working.
  */
 export async function scan(targets, options = {}) {
   const maxBytes = options.maxBytes || DEFAULT_MAX_BYTES;
@@ -136,9 +141,11 @@ export async function scan(targets, options = {}) {
   const skipDirs = options.skipDirs || (options.includeDirs ? skipDirsWithout(options.includeDirs) : DEFAULT_SKIP_DIRS);
 
   const started = Date.now();
+  const flagged = [];
   const result = {
     targets,
-    infected: [],
+    flagged,
+    infected: flagged,
     stats: { scanned: 0, skippedLarge: 0, unreadable: 0, bytes: 0, clean: 0, skippedDirs: 0 },
     skippedDirNames: [],
     sites: [],
@@ -187,8 +194,9 @@ export async function scan(targets, options = {}) {
         result.countsBySeverity[f.severity] = (result.countsBySeverity[f.severity] || 0) + 1;
         result.countsByCategory[f.category] = (result.countsByCategory[f.category] || 0) + 1;
       }
-      const record = { path: entry.path, size: buffer.length, findings };
-      result.infected.push(record);
+      const severity = topSeverity(findings);
+      const record = { path: entry.path, size: buffer.length, severity, verdict: verdictFor(severity), findings };
+      flagged.push(record);
       if (typeof options.onFile === "function") options.onFile(record);
     }
   }

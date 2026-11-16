@@ -9,6 +9,7 @@
 import { promises as fs, existsSync } from "node:fs";
 import path from "node:path";
 import { sha256 } from "./hashes.js";
+import { SERIOUS_FROM, SEVERITY_RANK, atLeast, topSeverity } from "./severity.js";
 
 /**
  * Quarantine is how JaySift removes a threat without ever destroying data.
@@ -66,19 +67,27 @@ async function saveManifest(vaultDir, manifest) {
 /**
  * Move flagged files into the vault.
  *
- * @param {Array<{path:string,findings:Array}>} records  infected records from a scan
+ * Only files whose worst finding is high or critical are moved. A medium or
+ * low finding is a reason to look at a file, not proof, so those files stay
+ * where they are and come back in `skipped`. Pass `minSeverity` to move them
+ * as well.
+ *
+ * @param {Array<{path:string,findings:Array}>} records  flagged records from a scan
  * @param {object} [options]
  * @param {string} [options.vaultDir]
  * @param {boolean} [options.dryRun]   report what would move without touching disk
- * @returns {Promise<{vaultDir:string, moved:Array, failed:Array, dryRun:boolean}>}
+ * @param {string} [options.minSeverity="high"]  the lowest severity to move
+ * @returns {Promise<{vaultDir:string, minSeverity:string, moved:Array, skipped:Array, failed:Array, dryRun:boolean}>}
  */
 export async function quarantineFiles(records, options = {}) {
   const vaultDir = options.vaultDir || defaultVaultDir();
   const dryRun = Boolean(options.dryRun);
+  const minSeverity = SEVERITY_RANK[options.minSeverity] ? options.minSeverity : SERIOUS_FROM;
   const moved = [];
+  const skipped = [];
   const failed = [];
 
-  if (!dryRun) await ensureVault(vaultDir);
+  // The vault is only made once there is something to put in it.
   const manifest = dryRun ? { version: 1, entries: [] } : await loadManifest(vaultDir);
   const vaultReal = path.resolve(vaultDir);
 
@@ -87,6 +96,12 @@ export async function quarantineFiles(records, options = {}) {
 
     // Never quarantine the vault's own files.
     if (abs.startsWith(vaultReal + path.sep)) continue;
+
+    const severity = topSeverity(record.findings);
+    if (!atLeast(severity, minSeverity)) {
+      skipped.push({ path: abs, severity });
+      continue;
+    }
 
     try {
       const stat = await fs.stat(abs);
@@ -99,6 +114,7 @@ export async function quarantineFiles(records, options = {}) {
       }
 
       const storedAbs = path.join(vaultDir, storedRel);
+      await ensureVault(vaultDir);
       await fs.copyFile(abs, storedAbs);
       const digest = sha256(await fs.readFile(storedAbs));
       await fs.chmod(storedAbs, 0o400).catch(() => {});
@@ -123,8 +139,8 @@ export async function quarantineFiles(records, options = {}) {
     }
   }
 
-  if (!dryRun) await saveManifest(vaultDir, manifest);
-  return { vaultDir, moved, failed, dryRun };
+  if (!dryRun && moved.length) await saveManifest(vaultDir, manifest);
+  return { vaultDir, minSeverity, moved, skipped, failed, dryRun };
 }
 
 /**
