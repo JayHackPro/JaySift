@@ -17,6 +17,8 @@
 export { scan, scanBuffer, worstSeverity, SEVERITY_RANK } from "./scanner.js";
 export { SEVERITIES, SERIOUS_FROM, topSeverity, verdictFor, countVerdicts } from "./severity.js";
 export { readPhp } from "./php.js";
+export { runPhpFlow } from "./flow.js";
+export { runServerConfigChecks } from "./serverconfig.js";
 export { walk, DEFAULT_SKIP_DIRS, skipDirsWithout } from "./walk.js";
 export {
   findWordPressRoots,
