@@ -7,7 +7,7 @@
  * https://github.com/JayHackPro/JaySift
  */
 
-import { promises as fs } from "node:fs";
+import { promises as fs, existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { scan } from "../src/scanner.js";
@@ -148,7 +148,8 @@ function helpText(v) {
                              (skipped: ${[...DEFAULT_SKIP_DIRS].join(" ")})
     --hashes <file>          add known-bad sha256 hashes (one per line)
     --max-size <MB>          skip files larger than this (default 5)
-    --vault <dir>            quarantine folder (default ${QUARANTINE_DIR})
+    --vault <dir>            quarantine folder (default ${QUARANTINE_DIR} in the
+                             folder you run from; keep it outside the website)
     --follow-symlinks        follow symbolic links (off by default)
     --dry-run                show actions without changing anything
     --json                   output JSON
@@ -307,14 +308,25 @@ async function runSelfTest(flags, v) {
   process.exitCode = res.passed ? 0 : 1;
 }
 
+/**
+ * Say where the vault was looked for. A vault is made in the folder the
+ * quarantine was run from, so from anywhere else it has to be named.
+ */
+function noVaultNote(where, emptyWord) {
+  return existsSync(where)
+    ? `The quarantine vault at ${where} ${emptyWord}.`
+    : `There is no quarantine vault at ${where}.\n  A vault is made in the folder --quarantine was run from. Run this from that folder, or name the vault with --vault <dir>.`;
+}
+
 async function runList(vaultDir, flags) {
   const { entries } = await listQuarantine({ vaultDir });
   if (flags.json) { process.stdout.write(JSON.stringify(entries, null, 2) + "\n"); return; }
+  const where = path.resolve(vaultDir);
   if (!entries.length) {
-    process.stdout.write("\n  " + color.dim("The quarantine vault is empty.") + "\n\n");
+    process.stdout.write("\n  " + color.dim(noVaultNote(where, "is empty")) + "\n\n");
     return;
   }
-  process.stdout.write("\n  " + color.bold(`Quarantine vault (${entries.length})`) + color.dim(`  ${vaultDir}`) + "\n\n");
+  process.stdout.write("\n  " + color.bold(`Quarantine vault (${entries.length})`) + color.dim(`  ${where}`) + "\n\n");
   for (const e of entries) {
     const worst = e.reason[0] ? severityColor(e.reason[0].severity)(e.reason[0].severity) : color.dim("unknown");
     process.stdout.write(`  ${color.dim(e.id)}  ${e.originalPath}\n     ${worst}  ${color.dim(e.quarantinedAt)}\n`);
@@ -326,7 +338,7 @@ async function runRestore(vaultDir, ids, flags) {
   const res = await restoreFiles({ vaultDir, ids, dryRun: Boolean(flags["dry-run"]) });
   if (flags.json) { process.stdout.write(JSON.stringify(res, null, 2) + "\n"); return; }
   if (!res.restored.length) {
-    process.stdout.write("\n  " + color.dim("Nothing to restore.") + "\n\n");
+    process.stdout.write("\n  " + color.dim("Nothing to restore. " + noVaultNote(path.resolve(vaultDir), "is empty")) + "\n\n");
     return;
   }
   const word = flags["dry-run"] ? "would restore" : "restored";

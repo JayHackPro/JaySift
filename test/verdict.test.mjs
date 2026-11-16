@@ -162,7 +162,7 @@ test("--quarantine leaves medium and low files and says so; --quarantine-severit
     assert.match(first.stdout, /high\.php \(quarantined\)/);
     assert.match(first.stdout, /medium\.php \(left in place\)/);
     assert.match(first.stdout, /low\.php \(left in place\)/);
-    assert.match(first.stdout, /Moved 2 files into the quarantine vault at:/);
+    assert.match(first.stdout, /Created a quarantine vault and moved 2 files into it:/);
     assert.match(first.stdout, /Left 2 files in place: medium and low findings are reasons to look, not proof\./);
     assert.equal(existsSync(files.medium), true);
     assert.equal(existsSync(files.low), true);
