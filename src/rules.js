@@ -22,7 +22,8 @@
  *   severity    critical | high | medium | low
  *   category    webshell | obfuscation | backdoor | exec | upload |
  *               injection | miner | skimmer | spam | test
- *   kinds       file kinds the rule applies to, or ["any"]
+ *   kinds       file kinds the rule applies to, or ["any"]. The kinds are php,
+ *               js, html, asp, python, perl, shell, htaccess, phpini, other
  *   pattern     a RegExp; the scanner reports the line of every match
  *   inComments  optional. In PHP files the rules read the code with its
  *               comments blanked, so a comment that mentions a dangerous call
@@ -35,6 +36,10 @@
 /** Map a file extension to a coarse "kind" the rules can target. */
 export function kindForPath(filePath) {
   const lower = String(filePath).toLowerCase();
+  // Server configuration files are known by their whole name.
+  const base = lower.slice(Math.max(lower.lastIndexOf("/"), lower.lastIndexOf("\\")) + 1);
+  if (base === ".htaccess") return "htaccess";
+  if (base === ".user.ini" || base === "php.ini") return "phpini";
   const dot = lower.lastIndexOf(".");
   const ext = dot === -1 ? "" : lower.slice(dot + 1);
   switch (ext) {
@@ -178,6 +183,17 @@ export const RULES = [
     pattern: /\bcall_user_func(?:_array)?\s*\(\s*\$_(?:GET|POST|REQUEST|COOKIE)\b/i,
     description: "Lets the request name the function to run, a compact backdoor.",
     references: ["https://owasp.org/www-community/attacks/Web_Shell"]
+  },
+  {
+    id: "php.include_user_input",
+    name: "include of raw request input",
+    severity: "high",
+    category: "backdoor",
+    kinds: ["php"],
+    // A real include, not a method called include() and not a longer name.
+    pattern: /(?<![\w$>:\\])(?:include|require)(?:_once)?\s*\(?\s*(?:\$_(?:GET|POST|REQUEST|COOKIE)\b|["']php:\/\/input["'])/i,
+    description: "Loads whatever file the request names and runs it as PHP, so a visitor can make the site run a file of their choosing.",
+    references: ["https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/07-Input_Validation_Testing/11.1-Testing_for_Local_File_Inclusion"]
   },
   {
     id: "php.extract_input",
