@@ -11,6 +11,7 @@ import { walk, DEFAULT_SKIP_DIRS, skipDirsWithout } from "./walk.js";
 import { rulesForKind, globalize, kindForPath } from "./rules.js";
 import { runHeuristics, runByteHeuristics, evidenceAt } from "./heuristics.js";
 import { matchHash } from "./hashes.js";
+import { readPhp, opensWithPhp } from "./php.js";
 import { findWordPressRoots, noteWordPressRoot, classifySiteFile, readWordPressVersion } from "./site.js";
 
 export const SEVERITY_RANK = { critical: 4, high: 3, medium: 2, low: 1 };
@@ -47,6 +48,11 @@ function findMatches(text, pattern) {
   return hits;
 }
 
+/** Two sorted line lists as one, without repeats, still capped. */
+function mergeLines(a, b) {
+  return [...new Set([...a, ...b])].sort((x, y) => x - y).slice(0, MATCHES_PER_RULE);
+}
+
 /**
  * Scan one already-read file and return its findings.
  *
@@ -73,8 +79,18 @@ export function scanBuffer(filePath, buffer, options = {}) {
   if (doText) {
     const text = buffer.toString("utf8");
 
-    for (const rule of rulesForKind(kind, ignore)) {
-      const lines = findMatches(text, rule.pattern);
+    // A file that opens with a PHP tag is a PHP script, whatever it is called.
+    const scanKind = kind === "other" && opensWithPhp(text) ? "php" : kind;
+
+    // In PHP the rules read the code with its comments blanked. When the
+    // reading is uncertain they read the untouched text as well.
+    const php = scanKind === "php" ? readPhp(text) : null;
+
+    for (const rule of rulesForKind(scanKind, ignore)) {
+      let lines;
+      if (!php || rule.inComments) lines = findMatches(text, rule.pattern);
+      else if (php.sure) lines = findMatches(php.masked, rule.pattern);
+      else lines = mergeLines(findMatches(php.masked, rule.pattern), findMatches(text, rule.pattern));
       if (!lines.length) continue;
       findings.push({
         id: rule.id,
@@ -90,7 +106,7 @@ export function scanBuffer(filePath, buffer, options = {}) {
       });
     }
 
-    for (const h of runHeuristics({ path: filePath, buffer, text, kind })) {
+    for (const h of runHeuristics({ path: filePath, buffer, text, kind: scanKind, php })) {
       if (!ignore.has(h.id)) findings.push(h);
     }
   }
