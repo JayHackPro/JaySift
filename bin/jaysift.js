@@ -52,7 +52,7 @@ const BOOLEAN_FLAGS = new Set([
   "json", "follow-symlinks", "no-color", "verbose", "dry-run",
   "yes", "help", "version", "banner", "no-banner"
 ]);
-const VALUE_FLAGS = new Set(["min-severity", "ignore-rule", "hashes", "max-size", "vault", "include"]);
+const VALUE_FLAGS = new Set(["min-severity", "quarantine-severity", "ignore-rule", "hashes", "max-size", "vault", "include"]);
 const LIST_FLAGS = new Set(["ignore-rule", "include"]);
 const ALIASES = { h: "help", V: "version", v: "verbose", q: "quarantine", j: "json" };
 
@@ -127,8 +127,10 @@ function helpText(v) {
     ${color.dim(GUIDE_URL)}
 
   ${color.bold("Remove")}   ${color.dim("(safe: files are moved, never deleted)")}
-    jaysift . --quarantine           move every threat into a local vault
+    jaysift . --quarantine           move critical and high findings into a local vault
     jaysift . --quarantine --dry-run preview what would move
+    jaysift . --quarantine --quarantine-severity low
+                                     move medium and low findings too
     jaysift --list                   show what is in the vault
     jaysift --restore                put every quarantined file back
     jaysift --restore <id>           put one file back
@@ -139,6 +141,8 @@ function helpText(v) {
 
   ${color.bold("Options")}
     --min-severity <level>   critical | high | medium | low
+    --quarantine-severity <level>
+                             lowest severity --quarantine moves (default high)
     --ignore-rule <id,...>   silence one or more rules
     --include <dir,...>      scan folders skipped by name, or "all"
                              (skipped: ${[...DEFAULT_SKIP_DIRS].join(" ")})
@@ -155,7 +159,7 @@ function helpText(v) {
     -V, --version            print version
     -h, --help               this help
 
-  ${color.bold("Exit codes")}   ${color.dim("0 clean   1 threats found   2 error")}
+  ${color.bold("Exit codes")}   ${color.dim("0 clean   1 something was flagged   2 error")}
 
   ${color.dim("JayHackPro® Inc.  Let's make the world a better place.")}
   ${color.dim("https://github.com/JayHackPro/JaySift")}
@@ -204,6 +208,9 @@ async function main() {
   if (flags["min-severity"] && !SEVERITIES.includes(flags["min-severity"])) {
     return fail(`--min-severity must be one of ${SEVERITIES.join(", ")}`);
   }
+  if (flags["quarantine-severity"] && !SEVERITIES.includes(flags["quarantine-severity"])) {
+    return fail(`--quarantine-severity must be one of ${SEVERITIES.join(", ")}`);
+  }
 
   let extraHashes;
   if (flags.hashes) {
@@ -243,31 +250,42 @@ async function main() {
 
   const showBanner = !flags.json && !flags["no-banner"];
 
-  let quarantined = false;
-  if (flags.quarantine && result.infected.length) {
-    const q = await quarantineFiles(result.infected, { vaultDir, dryRun: Boolean(flags["dry-run"]) });
-    quarantined = !flags["dry-run"];
+  // Quarantine moves critical and high findings. Medium and low are reasons
+  // to look at a file, so they stay put unless --quarantine-severity says so.
+  let quarantine = null;
+  if (flags.quarantine && result.flagged.length) {
+    quarantine = await quarantineFiles(result.flagged, {
+      vaultDir,
+      dryRun: Boolean(flags["dry-run"]),
+      minSeverity: flags["quarantine-severity"]
+    });
     if (flags["dry-run"] && !flags.json) {
       if (showBanner) process.stdout.write(brandBanner(v));
       process.stdout.write(formatHuman(result, { verbose: flags.verbose, header: !showBanner }));
-      process.stdout.write("\n  " + color.yellow(color.bold("Dry run")) + color.dim(` would quarantine ${q.moved.length} file(s). Nothing was changed.`) + "\n\n");
+      const left = quarantine.skipped.length
+        ? ` and leave ${quarantine.skipped.length} file(s) with lesser findings in place`
+        : "";
+      process.stdout.write(
+        "\n  " + color.yellow(color.bold("Dry run")) +
+        color.dim(` would move ${quarantine.moved.length} file(s) into ${path.resolve(quarantine.vaultDir)}${left}. Nothing was changed.`) + "\n\n"
+      );
       process.exitCode = 1;
       return;
     }
-    if (q.failed.length && !flags.json) {
-      for (const f of q.failed) process.stderr.write(color.red("  could not quarantine ") + f.path + ": " + f.error + "\n");
+    if (quarantine.failed.length && !flags.json) {
+      for (const f of quarantine.failed) process.stderr.write(color.red("  could not quarantine ") + f.path + ": " + f.error + "\n");
     }
   }
 
   if (flags.json) {
-    process.stdout.write(toJson(result, { version: v }) + "\n");
+    process.stdout.write(toJson(result, { version: v, quarantine }) + "\n");
   } else {
     if (showBanner) process.stdout.write(brandBanner(v));
-    process.stdout.write(formatHuman(result, { verbose: flags.verbose, quarantined, header: !showBanner }));
+    process.stdout.write(formatHuman(result, { verbose: flags.verbose, quarantine, header: !showBanner }));
     process.stderr.write(color.dim("  " + summaryLine(result)) + "\n");
   }
 
-  process.exitCode = result.infected.length ? 1 : 0;
+  process.exitCode = result.flagged.length ? 1 : 0;
 }
 
 async function runSelfTest(flags, v) {
