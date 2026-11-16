@@ -17,6 +17,13 @@ import { SERIOUS_FROM, SEVERITY_RANK, atLeast, topSeverity } from "./severity.js
  * the live site stops serving it immediately, yet every byte can be put back
  * with one command if a detection turns out to be wrong. Nothing is deleted
  * unless someone deliberately runs purge.
+ *
+ * A vault can end up inside a website, because by default it is made in the
+ * folder the command is run from. So what it holds must never be something a
+ * web server would run: a stored file is named <id>.quarantined with every
+ * dot in the original name replaced, which leaves no .php or other script
+ * ending for a server to act on, and the vault carries an .htaccess that
+ * denies all access and empty index files that stop a folder listing.
  */
 
 export const QUARANTINE_DIR = ".jaysift-quarantine";
@@ -39,13 +46,44 @@ export function defaultVaultDir() {
 }
 const MANIFEST = "manifest.json";
 const STORE = "files";
+const STORED_SUFFIX = ".quarantined";
 
 function sanitize(name) {
   return String(name).replace(/[^A-Za-z0-9._-]/g, "_").slice(0, 80) || "file";
 }
 
+/**
+ * The name a file is stored under. Apache can treat any dot-separated part of
+ * a name as an extension, so shell.php.bak may still run as PHP. No dot from
+ * the original name survives, and the one ending left means nothing to a server.
+ */
+export function storedName(id) {
+  return String(id).replace(/\./g, "_") + STORED_SUFFIX;
+}
+
+const VAULT_FILES = {
+  ".htaccess":
+    "# JaySift quarantine vault. Nothing in this folder should ever be served.\n" +
+    "<IfModule mod_authz_core.c>\n  Require all denied\n</IfModule>\n" +
+    "<IfModule !mod_authz_core.c>\n  Order allow,deny\n  Deny from all\n</IfModule>\n",
+  "index.html": "",
+  [STORE + "/index.html"]: "",
+  "README.txt":
+    "This folder is a JaySift quarantine vault.\n\n" +
+    "It holds files that JaySift moved out of a site, renamed so that a web\n" +
+    "server will not run them. manifest.json records where each one came from.\n\n" +
+    "Keep this folder outside any folder a web server can reach.\n\n" +
+    "  jaysift --list --vault <this folder>      show what is here\n" +
+    "  jaysift --restore --vault <this folder>   put every file back\n"
+};
+
+/** Make the vault if it is not there, with the files that keep it from being served. */
 async function ensureVault(vaultDir) {
   await fs.mkdir(path.join(vaultDir, STORE), { recursive: true });
+  for (const [name, body] of Object.entries(VAULT_FILES)) {
+    // Never overwrite: an owner may have edited these.
+    await fs.writeFile(path.join(vaultDir, name), body, { flag: "wx" }).catch(() => {});
+  }
 }
 
 /** Load the vault manifest, or an empty list if the vault is new. */
@@ -77,7 +115,8 @@ async function saveManifest(vaultDir, manifest) {
  * @param {string} [options.vaultDir]
  * @param {boolean} [options.dryRun]   report what would move without touching disk
  * @param {string} [options.minSeverity="high"]  the lowest severity to move
- * @returns {Promise<{vaultDir:string, minSeverity:string, moved:Array, skipped:Array, failed:Array, dryRun:boolean}>}
+ * @returns {Promise<{vaultDir:string, created:boolean, minSeverity:string, moved:Array, skipped:Array, failed:Array, dryRun:boolean}>}
+ *   `created` is true when this call made the vault.
  */
 export async function quarantineFiles(records, options = {}) {
   const vaultDir = options.vaultDir || defaultVaultDir();
@@ -90,6 +129,7 @@ export async function quarantineFiles(records, options = {}) {
   // The vault is only made once there is something to put in it.
   const manifest = dryRun ? { version: 1, entries: [] } : await loadManifest(vaultDir);
   const vaultReal = path.resolve(vaultDir);
+  const existed = existsSync(vaultDir);
 
   for (const record of records) {
     const abs = path.resolve(record.path);
@@ -106,7 +146,7 @@ export async function quarantineFiles(records, options = {}) {
     try {
       const stat = await fs.stat(abs);
       const id = sha256(abs).slice(0, 12) + "_" + sanitize(path.basename(abs));
-      const storedRel = path.join(STORE, id);
+      const storedRel = path.join(STORE, storedName(id));
 
       if (dryRun) {
         moved.push({ path: abs, id, dryRun: true });
@@ -115,6 +155,8 @@ export async function quarantineFiles(records, options = {}) {
 
       const storedAbs = path.join(vaultDir, storedRel);
       await ensureVault(vaultDir);
+      // The same path quarantined again replaces its earlier copy, which is read-only.
+      await fs.chmod(storedAbs, 0o600).catch(() => {});
       await fs.copyFile(abs, storedAbs);
       const digest = sha256(await fs.readFile(storedAbs));
       await fs.chmod(storedAbs, 0o400).catch(() => {});
@@ -140,7 +182,8 @@ export async function quarantineFiles(records, options = {}) {
   }
 
   if (!dryRun && moved.length) await saveManifest(vaultDir, manifest);
-  return { vaultDir, minSeverity, moved, skipped, failed, dryRun };
+  const created = !dryRun && !existed && existsSync(vaultDir);
+  return { vaultDir, created, minSeverity, moved, skipped, failed, dryRun };
 }
 
 /**

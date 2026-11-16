@@ -36,6 +36,7 @@ export {
   listQuarantine,
   purgeQuarantine,
   loadManifest,
+  storedName,
   QUARANTINE_DIR,
   LEGACY_QUARANTINE_DIR,
   defaultVaultDir

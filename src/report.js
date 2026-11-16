@@ -164,7 +164,9 @@ export function formatHuman(result, opts = {}) {
     const vault = path.resolve(q.vaultDir);
     const floor = q.minSeverity || SERIOUS_FROM;
     if (q.moved.length) {
-      out.push("  " + color.bold(`Moved ${files(q.moved.length)} into the quarantine vault at:`));
+      out.push("  " + color.bold(q.created
+        ? `Created a quarantine vault and moved ${files(q.moved.length)} into it:`
+        : `Moved ${files(q.moved.length)} into the quarantine vault at:`));
       out.push("  " + color.brand(`    ${vault}`));
       for (const line of vaultWarning(vault, result.targets)) out.push("  " + color.yellow(line));
       out.push("  " + color.dim("Put them back any time with:"));
@@ -284,6 +286,7 @@ export function toJson(result, extra = {}) {
         ? {
             quarantine: {
               vault: path.resolve(q.vaultDir),
+              created: Boolean(q.created),
               dryRun: Boolean(q.dryRun),
               minSeverity: q.minSeverity || SERIOUS_FROM,
               moved: q.moved.map((m) => ({ path: m.path, id: m.id })),
