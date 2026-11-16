@@ -1,9 +1,9 @@
 /*!
- * JayShield by JayHackPro
+ * JaySift by JayHackPro
  * Find and remove web malware, webshells, and backdoors.
  * Released under JayHackPro® Inc. Designed by Jayden Yoon ZK.
  * MIT License: use it freely, and keep this notice. The brand stays behind the code.
- * https://github.com/JayHackPro/JayShield
+ * https://github.com/JayHackPro/JaySift
  */
 
 import { promises as fs } from "node:fs";
@@ -30,14 +30,14 @@ export async function writeEicarSample(dir, name = "eicar-test.txt") {
 }
 
 /**
- * An inert webshell fixture. It contains the exact pattern JayShield detects,
+ * An inert webshell fixture. It contains the exact pattern JaySift detects,
  * but every occurrence sits inside a PHP comment, so the file does nothing at
  * all if it were ever run. It is only used to prove the signature engine
  * fires, and it is written to a temporary folder and deleted right after.
  */
 const INERT_SHELL_FIXTURE =
   "<?php\n" +
-  "// JayShield self-test fixture. Everything here is inside a comment and does nothing.\n" +
+  "// JaySift self-test fixture. Everything here is inside a comment and does nothing.\n" +
   "// The scanner should flag the pattern on the next line: eval(base64_decode($_POST['x']));\n";
 
 const CLEAN_FIXTURE =
@@ -52,7 +52,7 @@ const CLEAN_FIXTURE =
  */
 export async function selfTest() {
   const checks = [];
-  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "jayshield-selftest-"));
+  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "jaysift-selftest-"));
 
   try {
     const eicarPath = await writeEicarSample(tempDir);

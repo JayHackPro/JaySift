@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 /*!
- * JayShield by JayHackPro
+ * JaySift by JayHackPro
  * Find and remove web malware, webshells, and backdoors.
  * Released under JayHackPro® Inc. Designed by Jayden Yoon ZK.
  * MIT License: use it freely, and keep this notice. The brand stays behind the code.
- * https://github.com/JayHackPro/JayShield
+ * https://github.com/JayHackPro/JaySift
  */
 
 import { promises as fs } from "node:fs";
@@ -18,7 +18,8 @@ import {
   restoreFiles,
   listQuarantine,
   purgeQuarantine,
-  QUARANTINE_DIR
+  QUARANTINE_DIR,
+  defaultVaultDir
 } from "../src/quarantine.js";
 import { formatHuman, toJson, summaryLine } from "../src/report.js";
 import { renderBanner } from "../src/banner.js";
@@ -28,12 +29,12 @@ import { color, setColor, severityColor } from "../src/colors.js";
 const SEVERITIES = ["critical", "high", "medium", "low"];
 const here = path.dirname(fileURLToPath(import.meta.url));
 
-/** The JayHackPro brand banner, with the JayShield subtitle. */
+/** The JayHackPro brand banner, with the JaySift subtitle. */
 function brandBanner(v) {
   return renderBanner({
-    subtitle: "JayShield®  ·  find and remove web malware",
+    subtitle: "JaySift  ·  find and remove web malware",
     version: v,
-    url: "github.com/JayHackPro/JayShield"
+    url: "github.com/JayHackPro/JaySift"
   });
 }
 
@@ -55,10 +56,10 @@ const VALUE_FLAGS = new Set(["min-severity", "ignore-rule", "hashes", "max-size"
 const LIST_FLAGS = new Set(["ignore-rule", "include"]);
 const ALIASES = { h: "help", V: "version", v: "verbose", q: "quarantine", j: "json" };
 
-// A website address is not something JayShield can open. It reads files.
+// A website address is not something JaySift can open. It reads files.
 const LOOKS_LIKE_URL = /^[a-z][a-z0-9+.-]*:\/\//i;
 const LOOKS_LIKE_HOST = /^(?:www\.)?[a-z0-9-]+(?:\.[a-z0-9-]+)+(?:\/.*)?$/i;
-const GUIDE_URL = "https://github.com/JayHackPro/JayShield#scan-a-wordpress-site";
+const GUIDE_URL = "https://github.com/JayHackPro/JaySift#scan-a-wordpress-site";
 
 function parseArgs(argv) {
   const flags = { "ignore-rule": [], include: [] };
@@ -107,34 +108,34 @@ function helpText(v) {
   ${color.bold("Find and remove web malware, webshells, and backdoors.")}
 
   ${color.bold("Usage")}
-    jayshield [paths...] [options]
+    jaysift [paths...] [options]
 
   ${color.bold("Scan")}   ${color.dim("(read-only, nothing is changed)")}
-    jayshield ./public_html            scan a folder
-    jayshield file.php app/            scan several targets
-    jayshield .                        scan the current folder
-    jayshield . --min-severity high    show only high and critical
-    jayshield . --include vendor       also scan a folder skipped by name
-    jayshield . --json > report.json   machine-readable output
-    jayshield . --verbose              include rule ids and references
+    jaysift ./public_html            scan a folder
+    jaysift file.php app/            scan several targets
+    jaysift .                        scan the current folder
+    jaysift . --min-severity high    show only high and critical
+    jaysift . --include vendor       also scan a folder skipped by name
+    jaysift . --json > report.json   machine-readable output
+    jaysift . --verbose              include rule ids and references
 
   ${color.bold("Websites")}
-    JayShield reads files on disk. It does not connect to a URL.
+    JaySift reads files on disk. It does not connect to a URL.
     To check a live site, run it on the server over SSH, or on a copy of
     the site downloaded with SFTP or a backup. WordPress files that are
     flagged are marked, with advice to replace rather than only remove.
     ${color.dim(GUIDE_URL)}
 
   ${color.bold("Remove")}   ${color.dim("(safe: files are moved, never deleted)")}
-    jayshield . --quarantine           move every threat into a local vault
-    jayshield . --quarantine --dry-run preview what would move
-    jayshield --list                   show what is in the vault
-    jayshield --restore                put every quarantined file back
-    jayshield --restore <id>           put one file back
-    jayshield --purge --yes            permanently delete the vault (last resort)
+    jaysift . --quarantine           move every threat into a local vault
+    jaysift . --quarantine --dry-run preview what would move
+    jaysift --list                   show what is in the vault
+    jaysift --restore                put every quarantined file back
+    jaysift --restore <id>           put one file back
+    jaysift --purge --yes            permanently delete the vault (last resort)
 
   ${color.bold("Prove it works")}
-    jayshield --selftest               detect the EICAR test file end to end
+    jaysift --selftest               detect the EICAR test file end to end
 
   ${color.bold("Options")}
     --min-severity <level>   critical | high | medium | low
@@ -157,24 +158,24 @@ function helpText(v) {
   ${color.bold("Exit codes")}   ${color.dim("0 clean   1 threats found   2 error")}
 
   ${color.dim("JayHackPro® Inc.  Let's make the world a better place.")}
-  ${color.dim("https://github.com/JayHackPro/JayShield")}
+  ${color.dim("https://github.com/JayHackPro/JaySift")}
 `;
 }
 
 function fail(message) {
   process.stderr.write(color.red("  error: ") + message + "\n");
-  process.stderr.write(color.dim("  run  jayshield --help  for usage\n"));
+  process.stderr.write(color.dim("  run  jaysift --help  for usage\n"));
   process.exitCode = 2;
 }
 
-/** Someone passed a website address. Say plainly what JayShield can do instead. */
+/** Someone passed a website address. Say plainly what JaySift can do instead. */
 function failUrl(target) {
   const host = target.replace(/^[a-z][a-z0-9+.-]*:\/\//i, "").replace(/\/.*$/, "") || "example.com";
   const lines = [
-    `JayShield scans files on disk. It cannot connect to ${target}.`,
-    "  To check that site, run JayShield where its files are:",
-    color.brand(`    on the server, over SSH      jayshield /var/www/${host}/public_html`),
-    color.brand(`    or on a downloaded copy      jayshield ~/Downloads/${host}`),
+    `JaySift scans files on disk. It cannot connect to ${target}.`,
+    "  To check that site, run JaySift where its files are:",
+    color.brand(`    on the server, over SSH      jaysift /var/www/${host}/public_html`),
+    color.brand(`    or on a downloaded copy      jaysift ~/Downloads/${host}`),
     "  Get the files with SFTP, your host's file manager, or a full site backup.",
     color.dim(`  Guide: ${GUIDE_URL}`)
   ];
@@ -191,7 +192,7 @@ async function main() {
   if (flags.version) { process.stdout.write(v + "\n"); return; }
   if (bad) { fail(bad); return; }
 
-  const vaultDir = flags.vault || QUARANTINE_DIR;
+  const vaultDir = flags.vault || defaultVaultDir();
 
   // ----- Vault management modes
   if (flags.selftest) return runSelfTest(flags, v);
@@ -283,7 +284,7 @@ async function runSelfTest(flags, v) {
     process.stdout.write(`  ${mark} ${c.name}\n     ${color.dim(c.detail)}\n`);
   }
   process.stdout.write("\n  " + (res.passed
-    ? color.green(color.bold("All checks passed. JayShield is working."))
+    ? color.green(color.bold("All checks passed. JaySift is working."))
     : color.red(color.bold("Some checks failed."))) + "\n\n");
   process.exitCode = res.passed ? 0 : 1;
 }
@@ -300,7 +301,7 @@ async function runList(vaultDir, flags) {
     const worst = e.reason[0] ? severityColor(e.reason[0].severity)(e.reason[0].severity) : color.dim("unknown");
     process.stdout.write(`  ${color.dim(e.id)}  ${e.originalPath}\n     ${worst}  ${color.dim(e.quarantinedAt)}\n`);
   }
-  process.stdout.write("\n  " + color.dim("Restore with  jayshield --restore <id>  or  --restore  for all.") + "\n\n");
+  process.stdout.write("\n  " + color.dim("Restore with  jaysift --restore <id>  or  --restore  for all.") + "\n\n");
 }
 
 async function runRestore(vaultDir, ids, flags) {
@@ -327,6 +328,6 @@ async function runPurge(vaultDir, ids, flags) {
 }
 
 main().catch((err) => {
-  process.stderr.write(color.red("  JayShield error: ") + (err && err.stack ? err.stack : String(err)) + "\n");
+  process.stderr.write(color.red("  JaySift error: ") + (err && err.stack ? err.stack : String(err)) + "\n");
   process.exitCode = 2;
 });

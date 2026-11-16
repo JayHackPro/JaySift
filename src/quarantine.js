@@ -1,24 +1,41 @@
 /*!
- * JayShield by JayHackPro
+ * JaySift by JayHackPro
  * Find and remove web malware, webshells, and backdoors.
  * Released under JayHackPro® Inc. Designed by Jayden Yoon ZK.
  * MIT License: use it freely, and keep this notice. The brand stays behind the code.
- * https://github.com/JayHackPro/JayShield
+ * https://github.com/JayHackPro/JaySift
  */
 
-import { promises as fs } from "node:fs";
+import { promises as fs, existsSync } from "node:fs";
 import path from "node:path";
 import { sha256 } from "./hashes.js";
 
 /**
- * Quarantine is how JayShield removes a threat without ever destroying data.
+ * Quarantine is how JaySift removes a threat without ever destroying data.
  * A flagged file is moved into a local vault and recorded in a manifest, so
  * the live site stops serving it immediately, yet every byte can be put back
  * with one command if a detection turns out to be wrong. Nothing is deleted
  * unless someone deliberately runs purge.
  */
 
-export const QUARANTINE_DIR = ".jayshield-quarantine";
+export const QUARANTINE_DIR = ".jaysift-quarantine";
+
+/**
+ * The vault name from before the tool was renamed. It is still read, so a
+ * file quarantined under the old name can always be listed and restored.
+ */
+export const LEGACY_QUARANTINE_DIR = ".jayshield-quarantine";
+
+/**
+ * The vault to use when none is named. That is the current one, unless this
+ * folder only holds a vault from before the rename, which then stays in use.
+ */
+export function defaultVaultDir() {
+  if (!existsSync(QUARANTINE_DIR) && existsSync(LEGACY_QUARANTINE_DIR)) {
+    return LEGACY_QUARANTINE_DIR;
+  }
+  return QUARANTINE_DIR;
+}
 const MANIFEST = "manifest.json";
 const STORE = "files";
 
@@ -56,7 +73,7 @@ async function saveManifest(vaultDir, manifest) {
  * @returns {Promise<{vaultDir:string, moved:Array, failed:Array, dryRun:boolean}>}
  */
 export async function quarantineFiles(records, options = {}) {
-  const vaultDir = options.vaultDir || QUARANTINE_DIR;
+  const vaultDir = options.vaultDir || defaultVaultDir();
   const dryRun = Boolean(options.dryRun);
   const moved = [];
   const failed = [];
@@ -119,7 +136,7 @@ export async function quarantineFiles(records, options = {}) {
  * @param {boolean} [options.dryRun]
  */
 export async function restoreFiles(options = {}) {
-  const vaultDir = options.vaultDir || QUARANTINE_DIR;
+  const vaultDir = options.vaultDir || defaultVaultDir();
   const dryRun = Boolean(options.dryRun);
   const only = options.ids && options.ids.length ? new Set(options.ids) : null;
   const manifest = await loadManifest(vaultDir);
@@ -164,18 +181,18 @@ export async function restoreFiles(options = {}) {
 
 /** List everything currently held in the vault. */
 export async function listQuarantine(options = {}) {
-  const vaultDir = options.vaultDir || QUARANTINE_DIR;
+  const vaultDir = options.vaultDir || defaultVaultDir();
   const manifest = await loadManifest(vaultDir);
   return { vaultDir, entries: manifest.entries };
 }
 
 /**
  * Permanently delete quarantined files. This is the only destructive action
- * in JayShield, so it is never automatic and the CLI guards it behind an
+ * in JaySift, so it is never automatic and the CLI guards it behind an
  * explicit confirmation flag.
  */
 export async function purgeQuarantine(options = {}) {
-  const vaultDir = options.vaultDir || QUARANTINE_DIR;
+  const vaultDir = options.vaultDir || defaultVaultDir();
   const only = options.ids && options.ids.length ? new Set(options.ids) : null;
   const manifest = await loadManifest(vaultDir);
   const purged = [];

@@ -1,9 +1,9 @@
 /*!
- * JayShield by JayHackPro
+ * JaySift by JayHackPro
  * Find and remove web malware, webshells, and backdoors.
  * Released under JayHackPro® Inc. Designed by Jayden Yoon ZK.
  * MIT License: use it freely, and keep this notice. The brand stays behind the code.
- * https://github.com/JayHackPro/JayShield
+ * https://github.com/JayHackPro/JaySift
  */
 
 import { promises as fs } from "node:fs";
@@ -24,6 +24,7 @@ export const DEFAULT_SKIP_DIRS = new Set([
   ".hg",
   "node_modules",
   "vendor",
+  ".jaysift-quarantine",
   ".jayshield-quarantine",
   ".cache"
 ]);

@@ -1,7 +1,24 @@
 # Changelog
 
-All notable changes to JayShield are documented here.
+All notable changes to JaySift are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
+
+## 1.4.0 - 2026-11-17
+
+The tool has a new name, JaySift. It was called JayShield until this release.
+Nothing about how it scans has changed.
+
+### Changed
+
+- The command is now `jaysift` and the npm package is `jaysift`, so a scan is
+  `npx jaysift ./public_html`.
+- The repository is now https://github.com/JayHackPro/JaySift. Old links to it
+  redirect.
+- New quarantine vaults are named `.jaysift-quarantine`.
+- A vault made before the rename, `.jayshield-quarantine`, is still found and
+  used. `--list`, `--restore` and `--purge` keep working on files quarantined
+  earlier, and a scan still skips that folder.
+- The name is written without the ® symbol.
 
 ## 1.3.1 - 2026-09-14
 
@@ -20,13 +37,13 @@ means.
   `--include all` scans everything. The report now says how many folders were
   skipped and which names, so a clean result is never quieter than it should
   be. Skipped names are also listed in `--help`.
-- A clear answer when given a website address. `jayshield https://example.com`
-  used to fail with "no such file or folder"; it now explains that JayShield
+- A clear answer when given a website address. `jaysift https://example.com`
+  used to fail with "no such file or folder"; it now explains that JaySift
   reads files on disk and shows the two ways to scan that site, over SSH or on
   a downloaded copy.
 - README: a Requirements section, a step-by-step guide to scanning a WordPress
   site on any hosting, an after-the-scan checklist for the things a file
-  scanner cannot do, and a plain list of what JayShield can and cannot promise.
+  scanner cannot do, and a plain list of what JaySift can and cannot promise.
 - `scan()` accepts `includeDirs` and returns `sites`, `skippedDirNames`, and
   `stats.skippedDirs`; each infected record may carry `site`. The site helpers
   and the walker are exported from the package.
@@ -76,15 +93,15 @@ and will not release it, so the same code shipped as 1.3.1.
 
 ### Changed
 
-- The product now carries its registered mark, JayShield®, in the banner
-  subtitle and the scan header, matching how the brand appears everywhere else.
+- The product name now appears in the banner subtitle and the scan header,
+  matching how the brand appears everywhere else.
 
 ## 1.2.0 - 2026-07-13
 
 ### Added
 
 - A JayHackPro startup banner. A scan, `--help`, `--selftest`, and the new
-  `--banner` now print the JayHackPro block wordmark in green with the JayShield
+  `--banner` now print the JayHackPro block wordmark in green with the JaySift
   subtitle. It is the shared brand mark for JayHackPro tools. Narrow terminals
   get a compact version so it never wraps, and `--no-banner` (or `--json`) turns
   it off for clean and automated output.

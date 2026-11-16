@@ -11,7 +11,7 @@ test("the brand notice rides on every source module", async () => {
     for (const name of await fs.readdir(path.join(root, dir))) {
       if (!name.endsWith(".js")) continue;
       const text = await fs.readFile(path.join(root, dir, name), "utf8");
-      assert.match(text, /JayShield by JayHackPro/, `${name} is missing the brand notice`);
+      assert.match(text, /JaySift by JayHackPro/, `${name} is missing the brand notice`);
       assert.match(text, /Designed by Jayden Yoon ZK/, `${name} is missing the author line`);
     }
   }

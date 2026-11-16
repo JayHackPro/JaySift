@@ -10,9 +10,9 @@ import {
   countSiteRoles
 } from "../src/site.js";
 
-/** A small WordPress install with the markers JayShield looks for. */
+/** A small WordPress install with the markers JaySift looks for. */
 async function wordpressTree() {
-  const dir = await fs.mkdtemp(path.join(os.tmpdir(), "jayshield-site-"));
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), "jaysift-site-"));
   const site = path.join(dir, "public_html");
   for (const sub of [
     "wp-includes",

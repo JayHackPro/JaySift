@@ -23,4 +23,4 @@ jobs:
       - name: Run the test suite
         run: npm test
       - name: Prove the scanner works end to end
-        run: node bin/jayshield.js --selftest
+        run: node bin/jaysift.js --selftest

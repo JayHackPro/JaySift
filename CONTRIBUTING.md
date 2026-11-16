@@ -1,4 +1,4 @@
-# Contributing to JayShield
+# Contributing to JaySift
 
 Thanks for helping make the web a safer place. Contributions are welcome,
 especially new detection rules.
@@ -6,12 +6,12 @@ especially new detection rules.
 ## Getting set up
 
 ```bash
-git clone https://github.com/JayHackPro/JayShield.git
-cd JayShield
+git clone https://github.com/JayHackPro/JaySift.git
+cd JaySift
 npm test
 ```
 
-There are no dependencies to install. JayShield runs on Node 18 and newer.
+There are no dependencies to install. JaySift runs on Node 18 and newer.
 
 ## Adding a detection rule
 

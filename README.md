@@ -1,23 +1,23 @@
 <div align="center">
 
-<img src="docs/assets/hero.png" alt="JayShield by JayHackPro, find and remove web malware" width="100%">
+<img src="docs/assets/hero.png" alt="JaySift by JayHackPro, find and remove web malware" width="100%">
 
 A fast, dependency-free malware scanner and remover for websites and servers.<br>
 Point it at a folder, see exactly what is infected, then quarantine the threats safely.
 
-[![npm](https://img.shields.io/npm/v/@jayhackpro/jayshield?color=46f08a&labelColor=0b120e&logo=npm&logoColor=white)](https://www.npmjs.com/package/@jayhackpro/jayshield)
+[![npm](https://img.shields.io/npm/v/jaysift?color=46f08a&labelColor=0b120e&logo=npm&logoColor=white)](https://www.npmjs.com/package/jaysift)
 [![License](https://img.shields.io/badge/license-MIT-46f08a?labelColor=0b120e)](LICENSE)
 [![Node](https://img.shields.io/badge/node-%E2%89%A518-46f08a?labelColor=0b120e)](package.json)
 [![Dependencies](https://img.shields.io/badge/dependencies-0-46f08a?labelColor=0b120e)](package.json)
-[![CI](https://img.shields.io/github/actions/workflow/status/JayHackPro/JayShield/ci.yml?branch=main&label=tests&color=46f08a&labelColor=0b120e)](https://github.com/JayHackPro/JayShield/actions)
+[![CI](https://img.shields.io/github/actions/workflow/status/JayHackPro/JaySift/ci.yml?branch=main&label=tests&color=46f08a&labelColor=0b120e)](https://github.com/JayHackPro/JaySift/actions)
 
-**[Website](https://jayhackpro.github.io/JayShield/)**  ·  **[npm](https://www.npmjs.com/package/@jayhackpro/jayshield)**  ·  by **[JayHackPro](https://www.JayHackPro.com)**
+**[Website](https://jayhackpro.github.io/JaySift/)**  ·  **[npm](https://www.npmjs.com/package/jaysift)**  ·  by **[JayHackPro](https://www.JayHackPro.com)**
 
 </div>
 
 ---
 
-## Why JayShield
+## Why JaySift
 
 When a website is hacked, the attacker usually leaves something behind: a PHP
 webshell in the uploads folder, an obfuscated backdoor tacked onto a real file,
@@ -25,7 +25,7 @@ an invisible iframe on the homepage, or a cryptocurrency miner buried in a
 script. Finding these by hand across thousands of files is slow and easy to get
 wrong.
 
-JayShield does it in seconds. It reads every file, matches it against a library
+JaySift does it in seconds. It reads every file, matches it against a library
 of malware techniques, checks its exact fingerprint against known bad files,
 and looks for the telltale shapes of packed and hidden code. Then it shows you
 a clear, ranked report and offers to move the threats into a local vault so your
@@ -39,8 +39,8 @@ it anywhere Node is installed.
 - **Node.js 18 or newer** on the machine that runs the scan. Check with
   `node -v`. If that prints nothing or an older version, install Node from
   [nodejs.org](https://nodejs.org/) (macOS, Windows, and Linux installers).
-- **The site's files on that machine.** JayShield reads files on disk. It does
-  not connect to a website address, so `jayshield https://example.com` is
+- **The site's files on that machine.** JaySift reads files on disk. It does
+  not connect to a website address, so `jaysift https://example.com` is
   refused with an explanation. See [Scan a WordPress site](#scan-a-wordpress-site)
   for the two ways to get the files in front of it.
 
@@ -51,27 +51,27 @@ Nothing else: no account, no PHP, no database access, no background service.
 No install required, run it straight from npm:
 
 ```bash
-npx @jayhackpro/jayshield ./public_html
+npx jaysift ./public_html
 ```
 
 Prove it works on your machine first, using the harmless, industry-standard test file:
 
 ```bash
-npx @jayhackpro/jayshield --selftest
+npx jaysift --selftest
 ```
 
 Or install it once and call it by name:
 
 ```bash
-npm install -g @jayhackpro/jayshield
-jayshield ./public_html
+npm install -g jaysift
+jaysift ./public_html
 ```
 
-The examples below write `jayshield` for short, meaning however you choose to run it.
+The examples below write `jaysift` for short, meaning however you choose to run it.
 
 ## Scan a WordPress site
 
-JayShield finds the files an attacker planted or changed. To do that it needs
+JaySift finds the files an attacker planted or changed. To do that it needs
 the site's files, so pick whichever of these fits your hosting.
 
 **Path A: run it on the server.** If your host gives you SSH (most VPS plans,
@@ -86,7 +86,7 @@ If Node is there, scan the site root, which is usually `public_html`, `htdocs`,
 `www`, or `/var/www/<your-site>`:
 
 ```bash
-npx @jayhackpro/jayshield ~/public_html
+npx jaysift ~/public_html
 ```
 
 If Node is missing and you cannot install it, use Path B. On many shared hosts
@@ -100,7 +100,7 @@ host's file manager, or from a full backup made by your backup plugin. Unzip it
 on your own computer and scan the folder:
 
 ```bash
-npx @jayhackpro/jayshield ~/Downloads/example.com
+npx jaysift ~/Downloads/example.com
 ```
 
 The report is about the copy. Nothing on the live site changes, so clean the
@@ -108,11 +108,11 @@ live site by hand using the paths in the report: delete planted files over SFTP
 and replace infected WordPress files with clean copies (see below).
 
 **Scan the whole site root, not just `wp-content`.** Attackers also edit
-`wp-config.php`, `.htaccess`, and the root `index.php`, and JayShield can only
+`wp-config.php`, `.htaccess`, and the root `index.php`, and JaySift can only
 report on what it is pointed at. For a deeper scan add `--include vendor` so
 plugin dependency folders are read too.
 
-**Reading the results on a WordPress site.** JayShield recognises a WordPress
+**Reading the results on a WordPress site.** JaySift recognises a WordPress
 install, prints its version, and tags each flagged file that belongs to
 WordPress itself:
 
@@ -126,7 +126,7 @@ WordPress itself:
   until you do; `--restore` puts it back if that happens.
 
 **After the scan.** Removing the files is the start, not the end. Do these too,
-because JayShield cannot:
+because JaySift cannot:
 
 1. Update WordPress, every plugin, and every theme, and delete the ones you do
    not use. The way in was almost always an outdated or nulled one.
@@ -134,7 +134,7 @@ because JayShield cannot:
    database user in `wp-config.php`. Rotate the salts in `wp-config.php` with
    [new values](https://api.wordpress.org/secret-key/1.1/salt/).
 3. Look for admin users you did not create, in Users, and remove them.
-4. Check the database, which JayShield never reads: `siteurl` and `home` in
+4. Check the database, which JaySift never reads: `siteurl` and `home` in
    `wp_options`, unknown entries in `wp_options`, and `<script>` or `<iframe>`
    tags inside `wp_posts` content.
 5. Verify core against the official checksums with
@@ -149,7 +149,7 @@ because JayShield cannot:
 A report ranked by severity, with the exact line and a plain-language reason for every finding:
 
 <div align="center">
-<img src="docs/assets/scan.png" alt="A JayShield scan in a terminal: the JayHackPro banner, a CRITICAL obfuscated eval finding and a HIGH hidden-iframe finding, a severity summary, and a safe-removal hint" width="860">
+<img src="docs/assets/scan.png" alt="A JaySift scan in a terminal: the JayHackPro banner, a CRITICAL obfuscated eval finding and a HIGH hidden-iframe finding, a severity summary, and a safe-removal hint" width="860">
 </div>
 
 ## What it catches
@@ -175,7 +175,7 @@ A report ranked by severity, with the exact line and a plain-language reason for
 
 ## Remove threats safely
 
-JayShield never deletes your files. When you are ready to clean up, quarantine
+JaySift never deletes your files. When you are ready to clean up, quarantine
 moves each flagged file into a local vault and records where it came from, so
 your live site stops serving it at once while every byte is kept.
 
@@ -187,32 +187,32 @@ with clean copies. Run `--dry-run` first so you know what will move.
 
 ```bash
 # preview what would move, changing nothing
-jayshield ./public_html --quarantine --dry-run
+jaysift ./public_html --quarantine --dry-run
 
 # move every threat into the vault
-jayshield ./public_html --quarantine
+jaysift ./public_html --quarantine
 
 # see what is in the vault
-jayshield --list
+jaysift --list
 
 # put a file back if a detection was wrong
-jayshield --restore <id>
+jaysift --restore <id>
 
 # put everything back
-jayshield --restore
+jaysift --restore
 ```
 
 If you have confirmed the files are malicious and want the disk space back, and
 only then, you can permanently delete the vault:
 
 ```bash
-jayshield --purge --yes
+jaysift --purge --yes
 ```
 
 ## Command reference
 
 ```
-jayshield [paths...] [options]
+jaysift [paths...] [options]
 ```
 
 | Option | What it does |
@@ -226,7 +226,7 @@ jayshield [paths...] [options]
 | `--include <dir,...>` | Scan folders that are skipped by name, or `all` |
 | `--hashes <file>` | Add known bad sha256 hashes, one per line |
 | `--max-size <MB>` | Skip files larger than this (default 5) |
-| `--vault <dir>` | Quarantine folder (default `.jayshield-quarantine`) |
+| `--vault <dir>` | Quarantine folder (default `.jaysift-quarantine`) |
 | `--follow-symlinks` | Follow symbolic links (off by default) |
 | `--dry-run` | Show actions without changing anything |
 | `--json` | Machine-readable output for pipelines |
@@ -238,7 +238,7 @@ jayshield [paths...] [options]
 | `-V, --version` | Print the version |
 | `-h, --help` | Show help |
 
-Exit codes: `0` clean, `1` threats found, `2` error. That makes JayShield easy
+Exit codes: `0` clean, `1` threats found, `2` error. That makes JaySift easy
 to drop into a CI pipeline or a cron job.
 
 **What is skipped, and how to see it.** Folders named `.git`, `.svn`, `.hg`,
@@ -254,10 +254,10 @@ a favourite place to plant a shell.
 
 ```bash
 # fail the build if anything high or worse is found
-jayshield ./release --min-severity high || exit 1
+jaysift ./release --min-severity high || exit 1
 
 # save a JSON report
-jayshield ./public_html --json > jayshield-report.json
+jaysift ./public_html --json > jaysift-report.json
 ```
 
 ## Use it from code
@@ -265,11 +265,11 @@ jayshield ./public_html --json > jayshield-report.json
 Install it, then import the pieces you need:
 
 ```bash
-npm install @jayhackpro/jayshield
+npm install jaysift
 ```
 
 ```js
-import { scan, quarantineFiles } from "@jayhackpro/jayshield";
+import { scan, quarantineFiles } from "jaysift";
 
 const result = await scan(["./public_html"], { includeDirs: ["vendor"] });
 console.log(`${result.infected.length} infected of ${result.stats.scanned} scanned`);
@@ -295,7 +295,7 @@ e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  seen on client
 **Silence a noisy rule.** If a rule flags something you know is safe, pass its id:
 
 ```bash
-jayshield . --ignore-rule js.packer,spam.pharma
+jaysift . --ignore-rule js.packer,spam.pharma
 ```
 
 **Write new rules.** Signatures live in [`src/rules.js`](src/rules.js) as small,
@@ -303,9 +303,9 @@ readable objects. Each one has an id, a severity, the file kinds it applies to,
 and a pattern. Add one, add a test in [`test/rules.test.mjs`](test/rules.test.mjs),
 and send a pull request.
 
-## What JayShield can and cannot promise
+## What JaySift can and cannot promise
 
-JayShield is a fast first responder for web malware: a file scanner you run on
+JaySift is a fast first responder for web malware: a file scanner you run on
 demand, read in full, and script.
 
 **It can:**
@@ -343,8 +343,8 @@ WordPress 7.1 with and without `--include vendor`, WooCommerce 11.1.0, the
 Astra theme 4.13.11, jQuery 3.7.1, and Laravel 12.x, over twelve thousand files
 in all, with zero findings. The same run must still catch every planted threat
 in the test fixtures. The test suite runs on every change on Node 18, 20, and
-22. If JayShield flags a clean file on your site, that is a bug worth
-[reporting](https://github.com/JayHackPro/JayShield/issues).
+22. If JaySift flags a clean file on your site, that is a bug worth
+[reporting](https://github.com/JayHackPro/JaySift/issues).
 
 ## Development
 
@@ -358,7 +358,7 @@ read.
 
 ## About JayHackPro
 
-JayShield is built and maintained by **JayHackPro® Inc.**, a software
+JaySift is built and maintained by **JayHackPro® Inc.**, a software
 development company focused on cybersecurity, based in Los Angeles, California.
 
 > Let's make the world a better place.

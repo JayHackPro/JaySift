@@ -1,7 +1,7 @@
 /*!
- * JayShield landing page by JayHackPro
+ * JaySift landing page by JayHackPro
  * Released under JayHackPro® Inc. Designed by Jayden Yoon ZK.
- * https://github.com/JayHackPro/JayShield
+ * https://github.com/JayHackPro/JaySift
  */
 (() => {
   "use strict";
@@ -180,7 +180,7 @@
   const term = document.getElementById("term");
   const replay = document.querySelector(".term-replay");
   if (term) {
-    const CMD = "npx @jayhackpro/jayshield ./public_html";
+    const CMD = "npx jaysift ./public_html";
     // The JayHackPro startup banner, exactly as the CLI prints it.
     const ASCII = [
       "     ██╗ █████╗ ██╗   ██╗██╗  ██╗ █████╗  ██████╗██╗  ██╗██████╗ ██████╗  ██████╗",
@@ -193,8 +193,8 @@
     const lines = [
       { d: 350, html: "" },
       { d: 260, html: '<span class="t-banner"><span class="t-ascii">' + ASCII + '</span><span class="t-compact">  ▓█ JayHackPro █▓</span></span>' },
-      { d: 140, html: '<span class="t-sub">  JayShield®  ·  find and remove web malware</span><span class="t-dim">   v1.3.1</span>' },
-      { d: 100, html: '<span class="t-dim">  github.com/JayHackPro/JayShield</span>' },
+      { d: 140, html: '<span class="t-sub">  JaySift  ·  find and remove web malware</span><span class="t-dim">   v1.4.0</span>' },
+      { d: 100, html: '<span class="t-dim">  github.com/JayHackPro/JaySift</span>' },
       { d: 200, html: "" },
       { d: 420, html: '<span class="t-dim">  Scanned 1,284 files (24.6 MB) in 0.9s</span>' },
       { d: 140, html: "" },

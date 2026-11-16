@@ -1,9 +1,9 @@
 /*!
- * JayShield by JayHackPro
+ * JaySift by JayHackPro
  * Find and remove web malware, webshells, and backdoors.
  * Released under JayHackPro® Inc. Designed by Jayden Yoon ZK.
  * MIT License: use it freely, and keep this notice. The brand stays behind the code.
- * https://github.com/JayHackPro/JayShield
+ * https://github.com/JayHackPro/JaySift
  */
 
 import { color, severityColor } from "./colors.js";
@@ -28,9 +28,9 @@ function seconds(ms) {
   return ms < 1000 ? `${ms} ms` : `${(ms / 1000).toFixed(1)} s`;
 }
 
-/** The JayShield header line, brand green on the terminal. */
+/** The JaySift header line, brand green on the terminal. */
 export function banner() {
-  const mark = color.brand(color.bold("JayShield®"));
+  const mark = color.brand(color.bold("JaySift"));
   return `${color.brand("▓▓")} ${mark} ${color.dim("malware scanner by JayHackPro")}`;
 }
 
@@ -146,13 +146,13 @@ export function formatHuman(result, opts = {}) {
 
   if (!opts.quarantined) {
     out.push("  " + color.dim("Review the findings, then remove them safely with:"));
-    out.push("  " + color.brand(`    jayshield ${quoteTargets(result.targets)} --quarantine`));
+    out.push("  " + color.brand(`    jaysift ${quoteTargets(result.targets)} --quarantine`));
     out.push("  " + color.dim("Quarantine moves files into a local vault. Put them back any time with --restore."));
     if (siteFiles) out.push("  " + color.dim("Quarantining the WordPress files above takes the site offline until you replace them."));
     out.push("");
   } else {
     out.push("  " + color.dim("Files above were moved into the quarantine vault. Restore any of them with:"));
-    out.push("  " + color.brand("    jayshield --restore"));
+    out.push("  " + color.brand("    jaysift --restore"));
     if (siteFiles) {
       out.push("  " + color.yellow("WordPress files were moved too. If the site is offline now, restore them, then replace them with clean copies."));
     }
@@ -172,7 +172,7 @@ function quoteTargets(targets) {
 export function toJson(result, extra = {}) {
   return JSON.stringify(
     {
-      tool: "JayShield",
+      tool: "JaySift",
       vendor: "JayHackPro",
       version: extra.version || null,
       startedAt: result.startedAt,

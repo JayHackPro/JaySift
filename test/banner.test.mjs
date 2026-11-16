@@ -8,7 +8,7 @@ const strip = (s) => s.replace(ANSI, "");
 const visibleRows = (out) => strip(out).split("\n");
 
 test("a wide terminal gets the full block wordmark", () => {
-  const out = renderBanner({ subtitle: "JayShield", version: "1.2.0", cols: 100 });
+  const out = renderBanner({ subtitle: "JaySift", version: "1.2.0", cols: 100 });
   assert.ok(strip(out).includes("█"), "uses full block characters");
   const art = visibleRows(out).filter((l) => /[█╝═║]/.test(l));
   assert.equal(art.length, 6, "the wordmark is six rows tall");
@@ -16,15 +16,15 @@ test("a wide terminal gets the full block wordmark", () => {
 });
 
 test("a narrow terminal gets a compact banner that never wraps", () => {
-  const rows = visibleRows(renderBanner({ subtitle: "JayShield", cols: 60 }));
+  const rows = visibleRows(renderBanner({ subtitle: "JaySift", cols: 60 }));
   assert.ok(rows.some((l) => l.includes("JayHackPro")), "still names the brand");
   assert.ok(rows.every((l) => l.length <= 60), "fits the width");
 });
 
 test("the subtitle, version, and url are shown", () => {
-  const out = strip(renderBanner({ subtitle: "JayShield  ·  find and remove web malware", version: "1.2.0", url: "github.com/JayHackPro/JayShield", cols: 100 }));
-  assert.match(out, /JayShield/);
+  const out = strip(renderBanner({ subtitle: "JaySift  ·  find and remove web malware", version: "1.2.0", url: "github.com/JayHackPro/JaySift", cols: 100 }));
+  assert.match(out, /JaySift/);
   assert.match(out, /find and remove web malware/);
   assert.match(out, /v1\.2\.0/);
-  assert.match(out, /github\.com\/JayHackPro\/JayShield/);
+  assert.match(out, /github\.com\/JayHackPro\/JaySift/);
 });

@@ -1,9 +1,9 @@
 /*!
- * JayShield by JayHackPro
+ * JaySift by JayHackPro
  * Find and remove web malware, webshells, and backdoors.
  * Released under JayHackPro® Inc. Designed by Jayden Yoon ZK.
  * MIT License: use it freely, and keep this notice. The brand stays behind the code.
- * https://github.com/JayHackPro/JayShield
+ * https://github.com/JayHackPro/JaySift
  */
 
 /**
@@ -437,7 +437,7 @@ export const RULES = [
     category: "test",
     kinds: ["any"],
     pattern: /EICAR-STANDARD-ANTIVIRUS-TEST-FILE/,
-    description: "The harmless EICAR test string. Not a threat, but every scanner should detect it, so this proves JayShield is working.",
+    description: "The harmless EICAR test string. Not a threat, but every scanner should detect it, so this proves JaySift is working.",
     references: ["https://www.eicar.org/download-anti-malware-testfile/"]
   }
 ];

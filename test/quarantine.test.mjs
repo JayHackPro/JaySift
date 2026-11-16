@@ -4,10 +4,18 @@ import { promises as fs } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { scan } from "../src/scanner.js";
-import { quarantineFiles, restoreFiles, listQuarantine, purgeQuarantine } from "../src/quarantine.js";
+import {
+  quarantineFiles,
+  restoreFiles,
+  listQuarantine,
+  purgeQuarantine,
+  defaultVaultDir,
+  QUARANTINE_DIR,
+  LEGACY_QUARANTINE_DIR
+} from "../src/quarantine.js";
 
 async function infectedTree() {
-  const dir = await fs.mkdtemp(path.join(os.tmpdir(), "jayshield-q-"));
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), "jaysift-q-"));
   const shell = path.join(dir, "shell.php");
   await fs.writeFile(shell, "<?php eval(base64_decode($_POST['x'])); // planted");
   return { dir, shell, vault: path.join(dir, ".vault") };
@@ -59,7 +67,7 @@ test("dry run reports what would move but changes nothing", async () => {
 });
 
 test("restore can target a single id and leave the rest", async () => {
-  const dir = await fs.mkdtemp(path.join(os.tmpdir(), "jayshield-q2-"));
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), "jaysift-q2-"));
   const vault = path.join(dir, ".vault");
   try {
     const a = path.join(dir, "a.php");
@@ -91,6 +99,38 @@ test("purge permanently deletes from the vault without restoring", async () => {
     const left = await listQuarantine({ vaultDir: vault });
     assert.equal(left.entries.length, 0);
   } finally {
+    await fs.rm(dir, { recursive: true, force: true });
+  }
+});
+
+test("a vault made before the rename is still found and restored from", async () => {
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), "jaysift-legacy-"));
+  const shell = path.join(dir, "shell.php");
+  const body = "<?php eval(base64_decode($_POST['x'])); // planted";
+  await fs.writeFile(shell, body);
+  const cwd = process.cwd();
+  process.chdir(dir);
+  try {
+    assert.equal(defaultVaultDir(), QUARANTINE_DIR, "a fresh folder gets the current vault name");
+
+    // Quarantine into a vault that carries the old name, as an earlier version did.
+    const result = await scan([dir]);
+    const q = await quarantineFiles(result.infected, { vaultDir: LEGACY_QUARANTINE_DIR });
+    assert.equal(q.moved.length, 1);
+    assert.equal(await exists(shell), false);
+
+    assert.equal(defaultVaultDir(), LEGACY_QUARANTINE_DIR, "the old vault stays in use");
+    const { entries } = await listQuarantine();
+    assert.equal(entries.length, 1);
+
+    const again = await scan([dir]);
+    assert.equal(again.infected.length, 0, "a scan skips the old vault");
+
+    await restoreFiles();
+    assert.equal(await fs.readFile(shell, "utf8"), body);
+    assert.equal(await exists(path.join(dir, QUARANTINE_DIR)), false, "no second vault was made");
+  } finally {
+    process.chdir(cwd);
     await fs.rm(dir, { recursive: true, force: true });
   }
 });

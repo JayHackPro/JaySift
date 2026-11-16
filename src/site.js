@@ -1,9 +1,9 @@
 /*!
- * JayShield by JayHackPro
+ * JaySift by JayHackPro
  * Find and remove web malware, webshells, and backdoors.
  * Released under JayHackPro® Inc. Designed by Jayden Yoon ZK.
  * MIT License: use it freely, and keep this notice. The brand stays behind the code.
- * https://github.com/JayHackPro/JayShield
+ * https://github.com/JayHackPro/JaySift
  */
 
 import { promises as fs } from "node:fs";
@@ -12,7 +12,7 @@ import path from "node:path";
 /**
  * Site awareness.
  *
- * JayShield scans files on disk. On a WordPress site some of those files are
+ * JaySift scans files on disk. On a WordPress site some of those files are
  * the site's own code, and the site cannot run without them. When one of them
  * is flagged, the honest advice is different: quarantining wp-config.php or a
  * theme's functions.php takes the site offline, and injected code inside a

@@ -6,7 +6,7 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-const BIN = fileURLToPath(new URL("../bin/jayshield.js", import.meta.url));
+const BIN = fileURLToPath(new URL("../bin/jaysift.js", import.meta.url));
 
 function run(args, opts = {}) {
   return spawnSync(process.execPath, [BIN, ...args], {
@@ -36,7 +36,7 @@ test("an unknown option fails with exit code 2", () => {
 });
 
 test("scanning a clean folder exits 0", async () => {
-  const dir = await fs.mkdtemp(path.join(os.tmpdir(), "jayshield-cli-clean-"));
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), "jaysift-cli-clean-"));
   try {
     await fs.writeFile(path.join(dir, "ok.js"), "export const x = 1;");
     const r = run([dir]);
@@ -48,7 +48,7 @@ test("scanning a clean folder exits 0", async () => {
 });
 
 test("scanning an infected file exits 1 and names the rule", async () => {
-  const dir = await fs.mkdtemp(path.join(os.tmpdir(), "jayshield-cli-bad-"));
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), "jaysift-cli-bad-"));
   try {
     const f = path.join(dir, "x.php");
     await fs.writeFile(f, "<?php eval(base64_decode($_POST['x']));");
@@ -62,13 +62,13 @@ test("scanning an infected file exits 1 and names the rule", async () => {
 });
 
 test("--json emits valid, structured output", async () => {
-  const dir = await fs.mkdtemp(path.join(os.tmpdir(), "jayshield-cli-json-"));
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), "jaysift-cli-json-"));
   try {
     await fs.writeFile(path.join(dir, "x.php"), "<?php system($_GET['c']);");
     const r = run([dir, "--json"]);
     assert.equal(r.status, 1);
     const data = JSON.parse(r.stdout);
-    assert.equal(data.tool, "JayShield");
+    assert.equal(data.tool, "JaySift");
     assert.equal(data.vendor, "JayHackPro");
     assert.equal(data.summary.infected, 1);
     assert.ok(data.infected[0].findings.length >= 1);
@@ -102,7 +102,7 @@ test("a website address is refused with an explanation, not a confusing file err
 });
 
 test("--include scans a folder that is skipped by name", async () => {
-  const dir = await fs.mkdtemp(path.join(os.tmpdir(), "jayshield-cli-include-"));
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), "jaysift-cli-include-"));
   try {
     await fs.mkdir(path.join(dir, "vendor"));
     await fs.writeFile(path.join(dir, "ok.php"), "<?php echo 1;");
@@ -129,7 +129,7 @@ test("--include scans a folder that is skipped by name", async () => {
 });
 
 test("the report names WordPress files and says to replace them, in text and in JSON", async () => {
-  const dir = await fs.mkdtemp(path.join(os.tmpdir(), "jayshield-cli-wp-"));
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), "jaysift-cli-wp-"));
   try {
     await fs.mkdir(path.join(dir, "wp-includes"));
     await fs.writeFile(path.join(dir, "wp-settings.php"), "<?php // settings");

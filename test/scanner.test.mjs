@@ -6,7 +6,7 @@ import path from "node:path";
 import { scan, scanBuffer, worstSeverity } from "../src/scanner.js";
 
 async function tempTree() {
-  const dir = await fs.mkdtemp(path.join(os.tmpdir(), "jayshield-scan-"));
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), "jaysift-scan-"));
   await fs.mkdir(path.join(dir, "wp-content", "uploads"), { recursive: true });
   await fs.writeFile(path.join(dir, "index.php"), "<?php echo 'ok';");
   await fs.writeFile(path.join(dir, "style.css"), "body{margin:0}");
@@ -17,7 +17,7 @@ async function tempTree() {
 
 /** A WordPress install with threats planted where they turn up in real life. */
 async function wordpressTree() {
-  const dir = await fs.mkdtemp(path.join(os.tmpdir(), "jayshield-wp-"));
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), "jaysift-wp-"));
   const mk = async (rel, text) => {
     const full = path.join(dir, rel);
     await fs.mkdir(path.dirname(full), { recursive: true });
@@ -52,7 +52,7 @@ test("scan walks a tree and reports infected files only", async () => {
 });
 
 test("min severity drops lower findings", async () => {
-  const dir = await fs.mkdtemp(path.join(os.tmpdir(), "jayshield-sev-"));
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), "jaysift-sev-"));
   try {
     // Dean Edwards packer is a low-severity finding on its own.
     await fs.writeFile(path.join(dir, "p.js"), "eval(function(p,a,c,k,e,d){}('',1,1,''.split('|')))");
@@ -66,7 +66,7 @@ test("min severity drops lower findings", async () => {
 });
 
 test("ignoreRules silences a specific rule", async () => {
-  const dir = await fs.mkdtemp(path.join(os.tmpdir(), "jayshield-ign-"));
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), "jaysift-ign-"));
   try {
     await fs.writeFile(path.join(dir, "x.php"), "<?php eval(base64_decode($_POST['x']));");
     const off = await scan([dir], { ignoreRules: new Set(["php.eval_decode", "php.eval_user_input"]) });
@@ -79,7 +79,7 @@ test("ignoreRules silences a specific rule", async () => {
 });
 
 test("files above the size cap are skipped, not read", async () => {
-  const dir = await fs.mkdtemp(path.join(os.tmpdir(), "jayshield-big-"));
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), "jaysift-big-"));
   try {
     await fs.writeFile(path.join(dir, "huge.php"), "<?php eval(base64_decode($x)); " + "/*".repeat(1000));
     const result = await scan([dir], { maxBytes: 16 });
@@ -178,7 +178,7 @@ test("a plain folder reports no site and no site roles", async () => {
 });
 
 test("a clean tree returns an empty result", async () => {
-  const dir = await fs.mkdtemp(path.join(os.tmpdir(), "jayshield-clean-"));
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), "jaysift-clean-"));
   try {
     await fs.writeFile(path.join(dir, "app.js"), "export const two = 1 + 1;");
     const result = await scan([dir]);
