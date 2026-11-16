@@ -30,15 +30,17 @@ export async function writeEicarSample(dir, name = "eicar-test.txt") {
 }
 
 /**
- * An inert webshell fixture. It contains the exact pattern JaySift detects,
- * but every occurrence sits inside a PHP comment, so the file does nothing at
- * all if it were ever run. It is only used to prove the signature engine
- * fires, and it is written to a temporary folder and deleted right after.
+ * An inert webshell fixture. It has the exact shape JaySift detects, as real
+ * code, because a pattern that only appears in a comment is not a finding.
+ * It is harmless twice over: the script stops on the line before, and the
+ * encoded text only says echo 'hello'. It is used to prove the signature
+ * engine fires, written to a temporary folder and deleted right after.
  */
 const INERT_SHELL_FIXTURE =
   "<?php\n" +
-  "// JaySift self-test fixture. Everything here is inside a comment and does nothing.\n" +
-  "// The scanner should flag the pattern on the next line: eval(base64_decode($_POST['x']));\n";
+  "// JaySift self-test fixture. The script stops on the next line, so the last line never runs.\n" +
+  "exit;\n" +
+  "eval(base64_decode('ZWNobyAnaGVsbG8nOw=='));\n";
 
 const CLEAN_FIXTURE =
   "<?php\n" +

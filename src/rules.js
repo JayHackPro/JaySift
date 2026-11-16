@@ -24,6 +24,10 @@
  *               injection | miner | skimmer | spam | test
  *   kinds       file kinds the rule applies to, or ["any"]
  *   pattern     a RegExp; the scanner reports the line of every match
+ *   inComments  optional. In PHP files the rules read the code with its
+ *               comments blanked, so a comment that mentions a dangerous call
+ *               is not a finding. A fingerprint is different: a shell's own
+ *               banner comment is evidence, so these rules read comments too.
  *   description one plain sentence on why this is suspicious
  *   references  further reading
  */
@@ -42,6 +46,7 @@ export function kindForPath(filePath) {
     case "phtml":
     case "pht":
     case "phar":
+    case "inc":
       return "php";
     case "js":
     case "cjs":
@@ -248,6 +253,7 @@ export const RULES = [
   // ----- Known webshell family fingerprints
   {
     id: "shell.c99",
+    inComments: true,
     name: "c99 webshell",
     severity: "critical",
     category: "webshell",
@@ -258,6 +264,7 @@ export const RULES = [
   },
   {
     id: "shell.r57",
+    inComments: true,
     name: "r57 webshell",
     severity: "critical",
     category: "webshell",
@@ -268,6 +275,7 @@ export const RULES = [
   },
   {
     id: "shell.wso",
+    inComments: true,
     name: "WSO webshell",
     severity: "critical",
     category: "webshell",
@@ -278,6 +286,7 @@ export const RULES = [
   },
   {
     id: "shell.b374k",
+    inComments: true,
     name: "b374k webshell",
     severity: "critical",
     category: "webshell",
@@ -288,6 +297,7 @@ export const RULES = [
   },
   {
     id: "shell.filesman",
+    inComments: true,
     name: "FilesMan webshell action",
     severity: "high",
     category: "webshell",
@@ -298,6 +308,7 @@ export const RULES = [
   },
   {
     id: "shell.generic_banner",
+    inComments: true,
     name: "Webshell banner text",
     severity: "high",
     category: "webshell",
@@ -432,6 +443,7 @@ export const RULES = [
   // ----- The industry-standard antivirus test file
   {
     id: "test.eicar",
+    inComments: true,
     name: "EICAR antivirus test file",
     severity: "medium",
     category: "test",

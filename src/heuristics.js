@@ -8,6 +8,7 @@
 
 import path from "node:path";
 import { kindForPath } from "./rules.js";
+import { holdsNoCode } from "./php.js";
 
 /**
  * Heuristics look at shape and context rather than a fixed string, so they
@@ -50,9 +51,17 @@ const MEDIA_OR_DOC = new Set([
   ".pdf", ".txt", ".csv", ".doc", ".docx", ".xls", ".xlsx", ".zip"
 ]);
 const EXECUTABLE_KINDS = new Set(["php", "asp", "perl"]);
-// Web-served upload and media locations, where only static files belong.
-// Anchored to real path shapes so a system ancestor like /tmp never counts.
-const UPLOAD_PATH = /(?:wp-content\/(?:uploads|cache)|\/uploads?\/|\/media\/|\/attachments?\/|\/userfiles?\/)/i;
+// Web-served upload locations, where only static files belong. Anchored to
+// real path shapes so a system ancestor like /tmp never counts. A folder that
+// is merely named "media" is not one of them: plugins and frameworks keep
+// source code in folders called Media, and that name alone flagged dozens of
+// clean files. Magento's web-writable pub/media is listed by its full shape.
+const UPLOAD_PATH = /(?:wp-content\/(?:uploads|cache)|\/uploads?\/|\/pub\/media\/|\/attachments?\/|\/userfiles?\/)/i;
+
+// Plain-text documents. A readme often shows a line or two of PHP as a usage
+// example, which is not the same thing as a script saved under a text name.
+const TEXT_DOC = new Set([".txt", ".csv"]);
+const PHP_CLOSE = Buffer.from("?>");
 
 const PHP_TAG = Buffer.from("<?php");
 const PHP_SHORT = Buffer.from("<?=");
@@ -99,6 +108,29 @@ function phpTagOffset(buffer) {
   return Math.min(a, b);
 }
 
+/** The share of a buffer that sits inside PHP blocks, from 0 to 1. */
+function phpShare(buffer) {
+  if (!buffer.length) return 0;
+  let inside = 0;
+  let at = buffer.indexOf(PHP_TAG);
+  while (at !== -1) {
+    const close = buffer.indexOf(PHP_CLOSE, at);
+    const end = close === -1 ? buffer.length : close + 2;
+    inside += end - at;
+    at = buffer.indexOf(PHP_TAG, end);
+  }
+  return inside / buffer.length;
+}
+
+/**
+ * Is the PHP in this document the document itself, or an example inside it?
+ * It is the document when the tag sits at the very top (a short prefix such
+ * as GIF89a does not change that) or when most of the file is PHP.
+ */
+function docIsPhp(buffer, at) {
+  return at < 64 || phpShare(buffer) >= 0.5;
+}
+
 /**
  * Byte and path heuristics. These run on EVERY file, including ones that look
  * binary, because the classic upload bypass is a real image (binary, full of
@@ -115,7 +147,7 @@ export function runByteHeuristics(filePath, buffer) {
   // A file that claims to be an image or document but carries runnable PHP.
   if (MEDIA_OR_DOC.has(ext)) {
     const at = phpTagOffset(buffer);
-    if (at !== -1) {
+    if (at !== -1 && (!TEXT_DOC.has(ext) || docIsPhp(buffer, at))) {
       findings.push({
         id: "heuristic.php_in_media",
         name: "PHP code inside a media or document file",
@@ -159,9 +191,11 @@ export function runHeuristics(file) {
   const findings = [];
   const posix = file.path.toLowerCase().replace(/\\/g, "/");
 
-  // An executable script sitting in an uploads or media folder. A cache page
-  // whose only PHP is the die() guard is left alone, see onlyGuardPhp.
-  if (EXECUTABLE_KINDS.has(file.kind) && UPLOAD_PATH.test(posix) && !onlyGuardPhp(file.text)) {
+  // An executable script sitting in an uploads folder. Two shapes are left
+  // alone: a cache page whose only PHP is the die() guard (see onlyGuardPhp),
+  // and a file with nothing in it but comments, the "Silence is golden"
+  // index.php that stops a folder being listed.
+  if (EXECUTABLE_KINDS.has(file.kind) && UPLOAD_PATH.test(posix) && !onlyGuardPhp(file.text) && !(file.kind === "php" && holdsNoCode(file.text))) {
     findings.push(mk(
       "heuristic.exec_in_uploads",
       "Executable script in an uploads folder",
@@ -169,7 +203,7 @@ export function runHeuristics(file) {
       "webshell",
       file.text,
       /<\?php\b|<\?=|<%|#!/,
-      "Upload and media folders should hold only static files. An executable script here is very often a planted backdoor."
+      "Upload folders should hold only static files. An executable script here is very often a planted backdoor."
     ));
   }
 
