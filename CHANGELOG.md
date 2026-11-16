@@ -3,6 +3,89 @@
 All notable changes to JaySift are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## Unreleased
+
+A release about being right more often, and plainer about what a finding
+means. Measured on a corpus of 69 harmless stand-ins (`npm run corpus`):
+
+| | 1.4.1 | now |
+| --- | --- | --- |
+| Plain techniques caught, of 29 | 29 | 29 |
+| Light disguises caught, of 16 | 0 | 7 |
+| The same, with `--include all --max-size 10` | 2 | 9 |
+| Clean files flagged, of 24 | 7 | 3 |
+| Clean files flagged high or critical | 4 | 0 |
+
+### Fixed
+
+- A folder merely named `Media` is no longer treated as an uploads folder, so
+  plugin source kept in such a folder is not flagged. Magento's `pub/media`
+  still counts.
+- A `readme.txt` that shows a PHP usage example is not reported as PHP hidden
+  in a document. A text file that opens with a PHP tag, or is mostly PHP,
+  still is.
+- An `index.php` that holds only a comment or a `die`/`exit` guard, the
+  "Silence is golden" file, is not reported as a script planted in uploads.
+- A pattern that appears only inside a PHP comment is not a finding. The rules
+  now read PHP code with its comments blanked. Shell fingerprints still count
+  inside comments, since a shell's own banner is evidence.
+- The same path can be quarantined again after the file comes back. The second
+  attempt used to fail and leave the file in place.
+
+### Added
+
+- One step of disguise is now followed: a decoded or request value copied
+  into a variable and then passed to `eval` or a shell command
+  (`php.eval_via_variable`, `php.exec_via_variable`).
+- A comment between a function name and its bracket, as in
+  `eval/**/(base64_decode/**/(`, no longer hides the call.
+- Backtick execution: `php.backtick_user_input` (critical) when built from
+  request input, `php.backtick_exec` (medium) otherwise.
+- `php.include_user_input`: `include` or `require` of raw request input.
+- `.htaccess`, `.user.ini`, and `php.ini` are read. `server.php_handler_on_media`
+  (images or text files set to run as PHP), `server.search_redirect` (visitors
+  from search engines sent elsewhere), `server.auto_prepend_hidden` and
+  `server.auto_prepend` (a file run before every page). Firewall plugins that
+  load themselves with `auto_prepend_file` are recognised.
+- A file that opens with a PHP tag is scanned as PHP whatever it is called,
+  and `.inc` files are scanned as PHP.
+- `--quarantine-severity <level>` sets the lowest severity `--quarantine`
+  moves.
+- `npm run corpus` counts what the scanner catches, misses, and wrongly flags
+  on the stand-in corpus, and can measure another checkout with `--src`.
+
+### Changed
+
+- The report no longer calls a file infected. Critical and high findings are
+  "likely malicious", medium and low are "worth a look", and the summary
+  counts each.
+- `--quarantine` moves only files whose worst finding is critical or high. It
+  names the files it left in place. `quarantineFiles()` does the same, takes
+  `minSeverity`, and returns the files it left as `skipped`.
+- Quarantined files are stored as `<id>.quarantined` with every dot in the
+  original name replaced, so nothing in a vault ends in `.php`. A new vault
+  carries an `.htaccess` that denies access, empty index files, and a README.
+  Files stored by earlier versions are still restored.
+- After a quarantine the report prints the full path of the vault, says when
+  it was just created, and warns when it sits inside the scanned folder.
+  `--list` and `--restore` say where they looked when they find nothing.
+- Scan results list flagged files under `flagged`, each with a `severity` and
+  a `verdict` (`likely-malicious` or `review`). `infected` remains as the old
+  name for the same list, in the result and in `--json`. `--json` adds
+  `summary.flagged`, `summary.likelyMalicious`, `summary.review`, and a
+  `quarantine` block when files were moved.
+- Exit code `1` now reads "something was flagged". The codes themselves are
+  unchanged.
+
+### Still missed
+
+A function name built by joining strings, a function passed by name as a
+callback, request input written straight to a file, a WordPress login
+backdoor, a plain external script tag, a script loader written as hex
+strings, and a classic ASP one-liner. A shell in a skipped folder such as
+`vendor`, or padded past the size limit, is only found with `--include` and
+`--max-size`.
+
 ## 1.4.1 - 2026-11-17
 
 The tool has a new name, JaySift. It was called JayShield until this release.

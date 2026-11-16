@@ -50,7 +50,8 @@
   "scripts": {
     "test": "node --test test/*.test.mjs",
     "start": "node bin/jaysift.js",
-    "selftest": "node bin/jaysift.js --selftest"
+    "selftest": "node bin/jaysift.js --selftest",
+    "corpus": "node test/corpus/measure.mjs"
   },
   "dependencies": {}
 }
