@@ -26,19 +26,19 @@ test("the corpus: what is caught, what is missed, what is wrongly flagged", asyn
     const base = byDefault.sets.base;
     // Every plain technique is caught.
     assert.deepEqual(base.textbook, { total: 29, flagged: 29, serious: 26 });
-    // Seven of the sixteen light disguises are caught, nine once skipped
+    // Nine of the sixteen light disguises are caught, eleven once skipped
     // folders and large files are scanned. The rest are known gaps.
-    assert.deepEqual(base.disguised, { total: 16, flagged: 7, serious: 7 });
-    assert.deepEqual(everything.sets.base.disguised, { total: 16, flagged: 9, serious: 9 });
+    assert.deepEqual(base.disguised, { total: 16, flagged: 9, serious: 9 });
+    assert.deepEqual(everything.sets.base.disguised, { total: 16, flagged: 11, serious: 11 });
     // No clean file is called likely malicious. Three are still worth-a-look.
     assert.deepEqual(base.clean, { total: 24, flagged: 3, serious: 0 });
 
     // The files added with the calls-by-name checks, counted on their own.
-    // None of the seventeen disguises is caught yet: they are the gap to close.
+    // Thirteen of the seventeen disguises are caught and four are known gaps.
     // None of the five clean look-alikes is flagged at all.
     const added = byDefault.sets["calls-by-name"];
-    assert.deepEqual(added.disguised, { total: 17, flagged: 0, serious: 0 });
-    assert.deepEqual(everything.sets["calls-by-name"].disguised, { total: 17, flagged: 0, serious: 0 });
+    assert.deepEqual(added.disguised, { total: 17, flagged: 13, serious: 13 });
+    assert.deepEqual(everything.sets["calls-by-name"].disguised, { total: 17, flagged: 13, serious: 13 });
     assert.deepEqual(added.clean, { total: 5, flagged: 0, serious: 0 });
 
     const serious = (top) => top === "critical" || top === "high";
