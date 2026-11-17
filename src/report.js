@@ -33,7 +33,7 @@ function seconds(ms) {
 /** The JaySift header line, brand green on the terminal. */
 export function banner() {
   const mark = color.brand(color.bold("JaySift"));
-  return `${color.brand("▓▓")} ${mark} ${color.dim("malware scanner by JayHackPro")}`;
+  return `${color.brand("▓▓")} ${mark} ${color.dim("malware scanner by JayHackPro®")}`;
 }
 
 const files = (n) => `${n} file${n === 1 ? "" : "s"}`;

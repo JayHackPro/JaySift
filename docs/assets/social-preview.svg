@@ -47,7 +47,7 @@
       </g>
     </svg>
     <text x="108" y="52" font-size="56" font-weight="800" letter-spacing="-1.5" fill="#eef7f0">JaySift</text>
-    <text x="110" y="82" font-size="20" letter-spacing="0.2" fill="#46f08a">by JayHackPro</text>
+    <text x="110" y="82" font-size="20" letter-spacing="0.2" fill="#46f08a">by JayHackPro<tspan font-size="12" dy="-8">®</tspan></text>
   </g>
 
   <text x="90" y="316" font-size="44" font-weight="800" letter-spacing="-1" fill="#f2fff6">Find and remove</text>

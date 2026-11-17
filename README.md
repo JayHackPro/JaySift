@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="docs/assets/hero.png" alt="JaySift by JayHackPro, find and remove web malware" width="100%">
+<img src="docs/assets/hero.png" alt="JaySift by JayHackPro®, find and remove web malware" width="100%">
 
 A fast, dependency-free malware scanner and remover for websites and servers.<br>
 Point it at a folder, see exactly what was flagged and why, then quarantine the likely malware safely.
@@ -11,7 +11,7 @@ Point it at a folder, see exactly what was flagged and why, then quarantine the 
 [![Dependencies](https://img.shields.io/badge/dependencies-0-46f08a?labelColor=0b120e)](package.json)
 [![CI](https://img.shields.io/github/actions/workflow/status/JayHackPro/JaySift/ci.yml?branch=main&label=tests&color=46f08a&labelColor=0b120e)](https://github.com/JayHackPro/JaySift/actions)
 
-**[Website](https://jayhackpro.github.io/JaySift/)**  ·  **[npm](https://www.npmjs.com/package/jaysift)**  ·  by **[JayHackPro](https://www.JayHackPro.com)**
+**[Website](https://jayhackpro.github.io/JaySift/)**  ·  **[npm](https://www.npmjs.com/package/jaysift)**  ·  by **[JayHackPro®](https://www.JayHackPro.com)**
 
 </div>
 
@@ -149,7 +149,7 @@ because JaySift cannot:
 A report ranked by severity, with the exact line and a plain-language reason for every finding:
 
 <div align="center">
-<img src="docs/assets/scan.png" alt="A JaySift scan in a terminal: the JayHackPro banner, a CRITICAL obfuscated eval finding and a HIGH hidden-iframe finding, a severity summary, and a safe-removal hint" width="860">
+<img src="docs/assets/scan.png" alt="A JaySift scan in a terminal: the JayHackPro® banner, a CRITICAL obfuscated eval finding and a HIGH hidden-iframe finding, a severity summary, and a safe-removal hint" width="860">
 </div>
 
 ## What it catches
@@ -266,7 +266,7 @@ jaysift [paths...] [options]
 | `--json` | Machine-readable output for pipelines |
 | `--no-color` | Plain text |
 | `--no-banner` | Hide the startup banner |
-| `--banner` | Print the JayHackPro banner and exit |
+| `--banner` | Print the JayHackPro® banner and exit |
 | `-v, --verbose` | Include rule ids and references |
 | `--selftest` | Detect the EICAR test file end to end |
 | `-V, --version` | Print the version |
@@ -411,9 +411,9 @@ npm run corpus  # count what is caught, missed and wrongly flagged on the stand-
 Zero runtime dependencies, by design. A security tool should be small enough to
 read.
 
-## About JayHackPro
+## About JayHackPro®
 
-JaySift is built and maintained by **JayHackPro**, a software
+JaySift is built and maintained by **JayHackPro®**, a software
 development company focused on cybersecurity, based in Los Angeles, California.
 
 > Let's make the world a better place.

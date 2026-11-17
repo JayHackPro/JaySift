@@ -3,6 +3,11 @@
 All notable changes to JaySift are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## Unreleased
+
+- Restore JayHackPro® in publisher branding and the original registered-brand
+  artwork. The scanner name remains JaySift.
+
 ## 1.5.0 - 2026-11-17
 
 A release about being right more often, and plainer about what a finding
