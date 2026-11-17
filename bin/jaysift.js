@@ -162,7 +162,7 @@ function helpText(v) {
 
   ${color.bold("Exit codes")}   ${color.dim("0 clean   1 something was flagged   2 error")}
 
-  ${color.dim("JayHackPro  Let's make the world a better place.")}
+  ${color.dim("JayHackPro®  Let's make the world a better place.")}
   ${color.dim("https://github.com/JayHackPro/JaySift")}
 `;
 }

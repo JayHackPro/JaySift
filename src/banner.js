@@ -23,7 +23,7 @@ const ART = [
   " ╚════╝ ╚═╝  ╚═╝   ╚═╝   ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝╚═╝     ╚═╝  ╚═╝ ╚═════╝"
 ];
 const ART_WIDTH = 82;
-const COMPACT = "\u2593\u2588 JayHackPro \u2588\u2593";
+const COMPACT = "\u2593\u2588 JayHackPro® \u2588\u2593";
 
 /**
  * Build the banner string.

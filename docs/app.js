@@ -192,7 +192,7 @@
     ].join("\n");
     const lines = [
       { d: 350, html: "" },
-      { d: 260, html: '<span class="t-banner"><span class="t-ascii">' + ASCII + '</span><span class="t-compact">  ▓█ JayHackPro █▓</span></span>' },
+      { d: 260, html: '<span class="t-banner"><span class="t-ascii">' + ASCII + '</span><span class="t-compact">  ▓█ JayHackPro® █▓</span></span>' },
       { d: 140, html: '<span class="t-sub">  JaySift  ·  find and remove web malware</span><span class="t-dim">   v1.5.0</span>' },
       { d: 100, html: '<span class="t-dim">  github.com/JayHackPro/JaySift</span>' },
       { d: 200, html: "" },
