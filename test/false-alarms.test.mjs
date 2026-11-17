@@ -174,3 +174,10 @@ test("documentation that shows PHP is not read as a PHP script", () => {
   assert.equal(opensWithPhp(md), false);
   assert.deepEqual(idsFor("includes/form.inc", "<?php\nfunction acme_validate( $v ) { return ! empty( $v ); }\n"), []);
 });
+
+test("the reader reports where strings and code blocks are", () => {
+  const text = "<p>it's</p><?php $a = 'one'; /* 'no' */ $b = \"two\"; ?><p>'html'</p><?php echo `ls`;";
+  const { strings, blocks, masked } = readPhp(text);
+  assert.deepEqual(strings.map(([s, e]) => text.slice(s, e)), ["'one'", '"two"', "`ls`"]);
+  assert.deepEqual(blocks.map(([s, e]) => masked.slice(s, e).trim().slice(0, 9)), ["$a = 'one", "echo `ls`"]);
+});
