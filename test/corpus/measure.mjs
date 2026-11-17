@@ -41,16 +41,21 @@ try {
   } else {
     const line = (label, g) =>
       `  ${label.padEnd(34)} ${String(g.flagged).padStart(2)} of ${g.total} flagged, ${String(g.serious).padStart(2)} as high or critical`;
-    process.stdout.write(`\n  scanner: ${src}\n\n`);
-    for (const group of ["textbook", "disguised", "clean"]) {
-      process.stdout.write(line(`${group}, default settings`, byDefault.groups[group]) + "\n");
+    process.stdout.write(`\n  scanner: ${src}\n`);
+    // The base set first, then each batch added since, each counted on its own.
+    for (const set of Object.keys(byDefault.sets)) {
+      process.stdout.write(`\n  ${set === "base" ? "base set" : `added set: ${set}`}\n`);
+      for (const group of ["textbook", "disguised", "clean"]) {
+        if (byDefault.sets[set][group]) process.stdout.write(line(`${group}, default settings`, byDefault.sets[set][group]) + "\n");
+      }
+      if (everything.sets[set].disguised) process.stdout.write(line("disguised, everything included", everything.sets[set].disguised) + "\n");
     }
-    process.stdout.write(line("disguised, everything included", everything.groups.disguised) + "\n\n");
+    process.stdout.write("\n");
 
     const show = (title, rows) => {
       if (!rows.length) return;
       process.stdout.write(`  ${title}\n`);
-      for (const f of rows) process.stdout.write(`    ${(f.top || "-").padEnd(9)} ${f.path}  (${f.technique})\n`);
+      for (const f of rows) process.stdout.write(`    ${(f.top || "-").padEnd(9)} ${f.path}  (${f.technique})${f.set === "base" ? "" : `  [${f.set}]`}\n`);
       process.stdout.write("\n");
     };
     show("Bad files not flagged, default settings:", byDefault.files.filter((f) => f.group !== "clean" && !f.top));
