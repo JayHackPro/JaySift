@@ -1,6 +1,6 @@
 /*!
  * JaySift landing page by JayHackPro
- * Released under JayHackPro® Inc. Designed by Jayden Yoon ZK.
+ * Released under JayHackPro. Designed by Jayden Yoon ZK.
  * https://github.com/JayHackPro/JaySift
  */
 
@@ -366,7 +366,6 @@ h2 {
 /* Brand */
 .section-brand { border-top: 1px solid var(--line); }
 .brand-grid { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 48px; align-items: center; }
-.reg { font-size: 0.5em; vertical-align: super; color: var(--green); }
 .brand-slogan { font-family: var(--mono); color: var(--green-bright); font-size: 1.15rem; margin: 22px 0; text-shadow: 0 0 20px rgba(70, 240, 138, 0.2); }
 .brand-links { display: flex; flex-wrap: wrap; gap: 10px 22px; font-family: var(--mono); font-size: 0.9rem; }
 .brand-card {

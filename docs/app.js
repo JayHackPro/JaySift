@@ -1,6 +1,6 @@
 /*!
  * JaySift landing page by JayHackPro
- * Released under JayHackPro® Inc. Designed by Jayden Yoon ZK.
+ * Released under JayHackPro. Designed by Jayden Yoon ZK.
  * https://github.com/JayHackPro/JaySift
  */
 (() => {

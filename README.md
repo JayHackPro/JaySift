@@ -413,7 +413,7 @@ read.
 
 ## About JayHackPro
 
-JaySift is built and maintained by **JayHackPro® Inc.**, a software
+JaySift is built and maintained by **JayHackPro**, a software
 development company focused on cybersecurity, based in Los Angeles, California.
 
 > Let's make the world a better place.

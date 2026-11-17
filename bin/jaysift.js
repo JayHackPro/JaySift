@@ -2,7 +2,7 @@
 /*!
  * JaySift by JayHackPro
  * Find and remove web malware, webshells, and backdoors.
- * Released under JayHackPro® Inc. Designed by Jayden Yoon ZK.
+ * Released under JayHackPro. Designed by Jayden Yoon ZK.
  * MIT License: use it freely, and keep this notice. The brand stays behind the code.
  * https://github.com/JayHackPro/JaySift
  */
@@ -162,7 +162,7 @@ function helpText(v) {
 
   ${color.bold("Exit codes")}   ${color.dim("0 clean   1 something was flagged   2 error")}
 
-  ${color.dim("JayHackPro® Inc.  Let's make the world a better place.")}
+  ${color.dim("JayHackPro  Let's make the world a better place.")}
   ${color.dim("https://github.com/JayHackPro/JaySift")}
 `;
 }
