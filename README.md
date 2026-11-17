@@ -25,8 +25,9 @@ an invisible iframe on the homepage, or a cryptocurrency miner buried in a
 script. Finding these by hand across thousands of files is slow and easy to get
 wrong.
 
-JaySift does it in seconds. It reads every file, matches it against a library
-of malware techniques, checks its exact fingerprint against known bad files,
+JaySift reads the files within its configured scan limits, matches them against
+a library of malware techniques, checks their exact fingerprints against the
+hashes you supply (the built-in hash set contains only the EICAR test file),
 and looks for the telltale shapes of packed and hidden code. Then it shows you
 a clear, ranked report and offers to move the likely malware into a local vault
 so your site stops serving it right away.
@@ -117,13 +118,16 @@ install, prints its version, and tags each flagged file that belongs to
 WordPress itself:
 
 - **No tag** (`wp-content/uploads`, `wp-content/cache`, a stray file in the
-  root): almost always planted. Quarantine it.
+  root): the file is outside the WordPress roles JaySift recognises. Read the
+  evidence and check its purpose before deciding whether to quarantine it;
+  legitimate files can be flagged too.
 - **`[wordpress config]`**, **`[wordpress core]`**, **`[wordpress theme]`**,
-  **`[wordpress plugin]`**: a real file with injected code. The whole file is
-  untrusted, so replace it with a clean copy of the same version (core and
-  plugins from wordpress.org, the theme from where you got it) rather than only
-  removing it. Quarantining one of these takes the site or the theme offline
-  until you do; `--restore` puts it back if that happens.
+  **`[wordpress plugin]`**: the file belongs to the site's code. A finding does
+  not establish that it was changed or infected. Review it and, if you confirm
+  an unwanted change, replace it with a clean copy of the same version (core
+  and plugins from wordpress.org, the theme from where you got it).
+  Quarantining one of these can take the site or the theme offline until you
+  replace it; `--restore` puts it back if that happens.
 
 **After the scan.** Removing the files is the start, not the end. Do these too,
 because JaySift cannot:
@@ -178,8 +182,8 @@ A report ranked by severity, with the exact line and a plain-language reason for
   double extensions like `invoice.pdf.php`, a script saved as `.inc` or under
   any other name, and executable scripts sitting in an uploads folder where
   only static files belong.
-- **Known bad files**: exact matches against a hash set you can extend, plus the
-  EICAR antivirus test file.
+- **Files you list as bad**: exact matches against hashes you supply with
+  `--hashes`. The built-in hash set contains only the EICAR antivirus test file.
 
 ## What a finding means
 
@@ -197,17 +201,17 @@ finding.
 
 ## Remove threats safely
 
-JaySift never deletes your files. When you are ready to clean up, quarantine
+A normal scan reads files and reports findings. When you are ready to clean up, quarantine
 moves each file with a critical or high finding into a local vault and records
 where it came from, so your live site stops serving it at once while every byte
 is kept. Files with only medium or low findings stay where they are; add
 `--quarantine-severity low` if you have looked at them and want them moved too.
 
-On a WordPress site, check the tags in the report first. Files tagged
-`[wordpress core]`, `[wordpress config]`, `[wordpress theme]`, or
-`[wordpress plugin]` are the site's own code with something injected;
-quarantining them takes the site or the theme offline until you replace them
-with clean copies. Run `--dry-run` first so you know what will move.
+On a WordPress site, check the tags and evidence in the report first. Files
+tagged `[wordpress core]`, `[wordpress config]`, `[wordpress theme]`, or
+`[wordpress plugin]` belong to the site's code; the tag does not prove an
+injection. Quarantining them can take the site or the theme offline until you
+restore or replace them. Run `--dry-run` first so you know what will move.
 
 ```bash
 # preview what would move, changing nothing
