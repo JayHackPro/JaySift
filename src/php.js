@@ -40,10 +40,12 @@ function blank(s) {
  * Read PHP source.
  *
  * @param {string} text
- * @returns {{masked:string, sure:boolean, backticks:Array<[number,number]>, hasPhp:boolean}}
+ * @returns {{masked:string, sure:boolean, backticks:Array<[number,number]>, strings:Array<[number,number]>, blocks:Array<[number,number]>, hasPhp:boolean}}
  *   masked     the text with comments blanked, same length and line breaks
  *   sure       false when the reading is uncertain and the raw text must be matched too
  *   backticks  [start, end) of every backtick command, ticks included
+ *   strings    [start, end) of every string: quoted, backtick, heredoc and nowdoc
+ *   blocks     [start, end) of every stretch of PHP code, from after its open tag
  *   hasPhp     whether the file opens PHP at all
  */
 export function readPhp(text) {
@@ -51,7 +53,7 @@ export function readPhp(text) {
     return read(text);
   } catch {
     // Nesting deep enough to exhaust the stack is itself a reason for doubt.
-    return { masked: text, sure: false, backticks: [], hasPhp: true };
+    return { masked: text, sure: false, backticks: [], strings: [], blocks: [], hasPhp: true };
   }
 }
 
@@ -59,6 +61,8 @@ function read(text) {
   const n = text.length;
   const comments = [];
   const backticks = [];
+  const strings = [];
+  const blocks = [];
   let sure = !UNSURE_OPEN.test(text);
   let hasPhp = false;
 
@@ -160,15 +164,21 @@ function read(text) {
       } else if (c === 35 && text.charCodeAt(i + 1) !== 91) {
         i = lineComment(i); // "#[" is an attribute, not a comment
       } else if (c === 39) {
+        const start = i;
         i = singleQuoted(i + 1);
+        strings.push([start, i]);
       } else if (c === 34) {
+        const start = i;
         i = interpolated(i + 1, 34);
+        strings.push([start, i]);
       } else if (c === 96) {
         const start = i;
         i = interpolated(i + 1, 96);
         backticks.push([start, i]);
+        strings.push([start, i]);
       } else if (c === 60 && text.charCodeAt(i + 1) === 60 && text.charCodeAt(i + 2) === 60) {
         const end = heredoc(i);
+        if (end !== -1) strings.push([i, end]);
         i = end === -1 ? i + 3 : end;
       } else if (nested && c === 123) {
         depth++;
@@ -191,7 +201,9 @@ function read(text) {
     const open = OPEN_TAG.exec(text);
     if (!open) break;
     hasPhp = true;
-    i = code(open.index + open[0].length, false);
+    const start = open.index + open[0].length;
+    i = code(start, false);
+    blocks.push([start, i]);
   }
 
   let masked = text;
@@ -205,7 +217,7 @@ function read(text) {
     parts.push(text.slice(last));
     masked = parts.join("");
   }
-  return { masked, sure, backticks, hasPhp };
+  return { masked, sure, backticks, strings, blocks, hasPhp };
 }
 
 // "<?php" with nothing after it, or with only a die/exit guard, then the end
