@@ -13,6 +13,7 @@ import { runHeuristics, runByteHeuristics, evidenceAt } from "./heuristics.js";
 import { matchHash } from "./hashes.js";
 import { readPhp, opensWithPhp } from "./php.js";
 import { runPhpFlow } from "./flow.js";
+import { runPhpCalls } from "./calls.js";
 import { runServerConfigChecks } from "./serverconfig.js";
 import { SEVERITY_RANK, topSeverity, verdictFor } from "./severity.js";
 import { findWordPressRoots, noteWordPressRoot, classifySiteFile, readWordPressVersion } from "./site.js";
@@ -116,6 +117,13 @@ export function scanBuffer(filePath, buffer, options = {}) {
     // A value followed from the request or a decoder into eval or a command.
     if (php) {
       for (const f of runPhpFlow(text, php)) {
+        if (!ignore.has(f.id)) findings.push(f);
+      }
+    }
+
+    // A command or code function called by a name held in a string.
+    if (php) {
+      for (const f of runPhpCalls(text, php)) {
         if (!ignore.has(f.id)) findings.push(f);
       }
     }

