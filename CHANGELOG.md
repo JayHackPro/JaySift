@@ -3,12 +3,12 @@
 All notable changes to JaySift are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## Unreleased
+## 1.5.0 - 2026-11-17
 
 A release about being right more often, and plainer about what a finding
 means. Measured on a corpus of 69 harmless stand-ins (`npm run corpus`):
 
-| | 1.4.1 | now |
+| | 1.4.1 | 1.5.0 |
 | --- | --- | --- |
 | Plain techniques caught, of 29 | 29 | 29 |
 | Light disguises caught, of 16 | 0 | 7 |
