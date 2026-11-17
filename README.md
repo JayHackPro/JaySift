@@ -167,6 +167,9 @@ A report ranked by severity, with the exact line and a plain-language reason for
 - **One step of disguise**: a request value or a decoded payload copied into a
   variable before it reaches `eval` or `system`, and a comment slipped between
   a function name and its bracket, as in `eval/**/(`.
+- **Calls by name**: a command function called through a string that holds its
+  name, whether joined from pieces such as `'sys' . 'tem'` or passed as a
+  callback to `array_map` and its relatives, when it is given request input.
 - **Hostile server configuration**: an `.htaccess` that runs images as PHP or
   redirects visitors who arrive from a search engine, and `auto_prepend_file`
   in `.htaccess`, `.user.ini`, or `php.ini` pointing at a disguised file.
@@ -392,17 +395,23 @@ in all, with zero findings. The same run must still catch every planted threat
 in the test fixtures. The test suite runs on every change on Node 18, 20, and
 22.
 
-The suite also carries a corpus of 69 harmless stand-ins, written to a
-temporary folder when it runs: 24 clean files, 29 with one known technique
-each written the plain way, and 16 with one light disguise each. `npm run
-corpus` prints the counts. Today JaySift flags all 29 plain techniques, 7 of
-the 16 disguises (9 with `--include all --max-size 10`), and calls none of the
-24 clean files likely malicious; 3 of them get a medium or low finding. The
-disguises it still misses are a function name built by joining strings, a
-function passed by name as a callback, request input written straight to a
-file, a WordPress login backdoor, a plain external script tag, a script loader
-written as hex strings, and a classic ASP one-liner. If JaySift flags a clean file on your site, that is a bug worth
-[reporting](https://github.com/JayHackPro/JaySift/issues).
+The suite also carries a corpus of harmless stand-ins, written to a temporary
+folder when it runs. `npm run corpus` prints the counts. Its base set is 69
+files: 24 clean files, 29 with one known technique each written the plain way,
+and 16 with one light disguise each. Today JaySift flags all 29 plain
+techniques, 9 of the 16 disguises (11 with `--include all --max-size 10`), and
+calls none of the 24 clean files likely malicious; 3 of them get a medium or
+low finding. The disguises it still misses there are request input written
+straight to a file, a WordPress login backdoor, a plain external script tag, a
+script loader written as hex strings, and a classic ASP one-liner.
+
+A second set of 22 files came with the calls-by-name checks and is counted
+apart, so the figures above stay comparable. JaySift flags 13 of its 17
+disguises and none of its 5 clean look-alikes. The four it misses are a name
+reversed with `strrev`, a name joined from array elements, a command function
+set as an output buffer callback, and a joined name called on a fixed value
+with no request input. If JaySift flags a clean file on your site, that is a
+bug worth [reporting](https://github.com/JayHackPro/JaySift/issues).
 
 ## Development
 

@@ -7,6 +7,27 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - Restore JayHackPro® in publisher branding and the original registered-brand
   artwork. The scanner name remains JaySift.
+- Catch a command or code function called by name on request input: called
+  through a variable or a bracketed string that holds its name
+  (`php.call_by_name`), or passed as a callback to `call_user_func`,
+  `array_map`, `array_filter`, `usort`, `register_shutdown_function`,
+  `filter_var` and their relatives (`php.callback_by_name`). The name may be
+  joined with `.`, `.=`, `implode` or `chr()`, or written with escapes. Both
+  findings are high.
+- For these checks the scanner reads PHP as names, strings and punctuation
+  rather than as text. A call written inside a comment or a string is not
+  code, a variable is not followed from one function into another except
+  through `use` and `global`, a later assignment replaces an earlier one, and
+  an assignment inside a branch only adds a possibility. Scanned code is
+  never run.
+- Measured on the corpus (`npm run corpus`): the base set of 69 files goes
+  from 7 to 9 of 16 disguises caught at default settings, 9 to 11 with
+  everything included, with the 29 plain techniques and the 24 clean files
+  unchanged. A new set of 22 stand-ins is counted apart: 13 of 17 disguises
+  caught, none of 5 clean look-alikes flagged. Still missed in that set: a
+  name reversed with `strrev`, a name joined from array elements, a command
+  function set as an output buffer callback, and a joined name called with no
+  request input.
 
 ## 1.5.0 - 2026-11-17
 
