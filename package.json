@@ -26,7 +26,7 @@
     "url": "git+https://github.com/JayHackPro/JaySift.git"
   },
   "license": "MIT",
-  "author": "Jayden Yoon ZK (JayHackPro Inc.)",
+  "author": "Jayden Yoon ZK (JayHackPro)",
   "type": "module",
   "bin": {
     "jaysift": "bin/jaysift.js"
