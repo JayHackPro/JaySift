@@ -56,7 +56,7 @@
     <div class="hero-copy">
       <p class="eyebrow"><span class="prompt">root@server</span><span class="tilde">:~#</span> incident response, automated</p>
       <h1>Find the malware<br>hiding in your website.</h1>
-      <p class="lede">When a site gets hacked, the attacker leaves something behind: a webshell in the uploads folder, a backdoor bolted onto a real file, a miner buried in a script. <strong>JaySift</strong> finds it in seconds and quarantines it safely, without ever deleting your data.</p>
+      <p class="lede">When a site gets hacked, the attacker leaves something behind: a webshell in the uploads folder, a backdoor bolted onto a real file, a miner buried in a script. <strong>JaySift</strong> reads your files and reports suspicious patterns. Review the findings before choosing to quarantine.</p>
       <div class="cta-row">
         <button class="copy-cmd" data-cmd="npx jaysift ./public_html" aria-label="Copy install command">
           <span class="copy-prompt">$</span>
@@ -152,14 +152,14 @@
     <div class="wrap how-grid">
       <div class="how-copy">
         <p class="kicker">// remediation</p>
-        <h2>Remove threats without losing a byte.</h2>
-        <p class="section-lede">JaySift never deletes your files. Quarantine moves each flagged file into a local vault and records where it came from, so your live site stops serving it at once while every byte is kept.</p>
+        <h2>Review, quarantine, restore.</h2>
+        <p class="section-lede">A scan reads files and reports findings. If you choose quarantine, JaySift moves files into a local vault and records their original paths so they can be restored.</p>
         <ul class="how-list">
           <li><span class="how-num">01</span> <div><b>Scan</b> read-only by default. Nothing on disk changes until you say so.</div></li>
-          <li><span class="how-num">02</span> <div><b>Quarantine</b> flagged files move into a sealed local vault, out of the web root.</div></li>
+          <li><span class="how-num">02</span> <div><b>Quarantine</b> moves flagged files into a local vault. Keep the vault outside the web root.</div></li>
           <li><span class="how-num">03</span> <div><b>Restore</b> put anything back, byte for byte, if a detection was wrong.</div></li>
         </ul>
-        <p class="how-note">Purge is the only destructive action, and it never runs without an explicit confirmation.</p>
+        <p class="how-note"><code>--purge --yes</code> permanently deletes the vault's stored files. Use it only after reviewing what is in the vault.</p>
       </div>
       <div class="how-term" aria-hidden="true">
         <div class="mini-term">
@@ -168,7 +168,7 @@
           <div class="mini-line"><span class="sv-crit">✕</span> uploads/logo.php <span class="dim">quarantined</span></div>
           <div class="mini-line"><span class="sv-crit">✕</span> uploads/thumb.png <span class="dim">quarantined</span></div>
           <div class="mini-line"><span class="sv-high">▲</span> index.html <span class="dim">quarantined</span></div>
-          <div class="mini-line ok">✔ 3 threats sealed. restore any time with --restore</div>
+          <div class="mini-line ok">✔ 3 files moved. restore with --restore</div>
         </div>
       </div>
     </div>
@@ -193,7 +193,7 @@
           <button class="copy-cmd wide" data-cmd="npm install -g jaysift"><span class="copy-prompt">$</span><code>npm install <span class="nb">-g</span> <span class="nb">jaysift</span></code><span class="copy-icon" aria-hidden="true">⧉</span></button>
         </div>
       </div>
-      <p class="install-foot">Exit codes make it drop straight into CI: <code>0</code> clean, <code>1</code> something was flagged, <code>2</code> error. Add <code>--json</code> for machine-readable output. WordPress owners: the <a href="https://github.com/JayHackPro/JaySift#scan-a-wordpress-site">step-by-step guide</a> covers any hosting, and the report tags WordPress core, theme, and plugin files so you replace those instead of only removing them.</p>
+      <p class="install-foot">Exit codes make it drop straight into CI: <code>0</code> clean, <code>1</code> something was flagged, <code>2</code> error. Add <code>--json</code> for machine-readable output. WordPress owners: the <a href="https://github.com/JayHackPro/JaySift#scan-a-wordpress-site">step-by-step guide</a> covers any hosting. The report tags core, theme, and plugin files by their role; a tag does not prove infection. Review the evidence before taking action. If you confirm malicious changes, replace affected files with clean copies of the same version.</p>
     </div>
   </section>
 
